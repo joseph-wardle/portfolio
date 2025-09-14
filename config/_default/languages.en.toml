@@ -17,7 +17,7 @@ title = "Joseph Wardle"
 [params.author]
   name = "Joseph Wardle"
   email = "joseph.m.wardle@gmail.com"
-#   image = "img/blowfish_ logo.png"
+  image = "img/profile.jpg"
 #   imageQuality = 96
   headline = "Graphics Programmer — real-time rendering, C++/Rust, GPU systems"
   bio = "Lorem Ipsum"
