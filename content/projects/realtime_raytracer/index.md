@@ -4,16 +4,6 @@ date: 2025-08-15
 summary: "Vulkan RT in C++"
 tags: ["Rendering", "Ray Tracing", "Vulkan", "C++"]
 weight: 1
-cover:
-    image: "bistro.png"
-    alt: "Ray-traced Bistro"
-links:
-    - icon: github
-      title: "Source"
-      url: "https://github.com/DallinClark/RealTimeRaytracer"
-    - icon: play
-      title: "Demo"
-      url: "https://youtu.be/-KWMoVI1ow4"
 ---
 
 {{< carousel images="gallery/*" interval="3000" >}}
