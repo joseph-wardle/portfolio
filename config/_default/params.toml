@@ -1,5 +1,5 @@
 # -- Theme Options --
-colorScheme = "blowfish"
+colorScheme = "gruvbox"
 defaultAppearance = "dark" # valid options: light or dark
 autoSwitchAppearance = true
 
@@ -17,7 +17,7 @@ disableImageOptimizationMD = false
 disableTextInHeader = false
 # backgroundImageWidth = 1200
 
-# defaultBackgroundImage = "IMAGE.jpg" # used as default for background images 
+# defaultBackgroundImage = "IMAGE.jpg" # used as default for background images
 # defaultFeaturedImage = "IMAGE.jpg" # used as default for featured images in all articles
 # defaultSocialImage = "/android-chrome-512x512.png" # used as default for social media sharing (Open Graph and Twitter)
 
@@ -124,4 +124,3 @@ forgejoDefaultServer = "https://v11.next.forgejo.org"
   groupByYear = false
   cardView = false
   cardViewScreenWidth = false
-
