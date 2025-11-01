@@ -3,7 +3,7 @@ title: "Real-Time Ray Tracer"
 date: 2025-08-15
 summary: "Vulkan RT in C++"
 tags: ["Rendering", "Ray Tracing", "Vulkan", "C++"]
-weight: 8
+weight: 2
 ---
 
 {{< carousel images="gallery/*" interval="3000" >}}

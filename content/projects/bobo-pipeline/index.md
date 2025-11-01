@@ -3,7 +3,7 @@ title: "Honey Business Pipeline"
 date: 2025-06-18
 summary: "Physically modivated film grain synthesis"
 tags: ["WGPU", "Rust"]
-weight: 10
+weight: 1
 ---
 
 This project is a custom DCC-agnostic production pipeline I helped build for the short film *Honey Business* by the BYU Center for Animation. It buildes upon [Scott Milner's](https://www.linkedin.com/in/sdmilner/) work for the short film's *Student Accomplice* and *Love and Gold*. Go read Scott's [pipeline overview](https://scottdmilner.github.io/code-projects/dungeon-pipeline/) for an in depth summary of the core systems design. The fantastic [Dallin Clark](https://www.linkedin.com/in/dallin-clark1/) contributed heavily to the pipeline as well. I was brought in to work on the last half of production.
