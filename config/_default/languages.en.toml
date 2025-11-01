@@ -19,16 +19,10 @@ title = "Joseph Wardle"
   email = "joseph.m.wardle@gmail.com"
   image = "img/profile.jpg"
 #   imageQuality = 96
-  headline = "Graphics Programmer — real-time rendering, C++/Rust, GPU systems"
-  bio = "Lorem Ipsum"
+  headline = "Aspiring TD and Graphics Programmer — Cross DCC tools, USD, GPU Programming"
+  bio = "Aspiring TD and Graphics Programmer"
   links = [
     { email = "mailto:joseph.m.wardle@gmail.com" },
-#     { bluesky = "https://bsky.app/profile/username" },
-    { discord = "https://discord.gg/XDTaZBnM" },
     { github = "https://github.com/joseph-wardle" },
-#     { instagram = "https://instagram.com/username" },
-#     { itch-io = "https://username.itch.io" },
-#     { mastodon = "https://mastodon.instance/@username" },
-#     { steam = "https://steamcommunity.com/profiles/userid" },
+    { linkedin = "https://www.linkedin.com/in/joseph-wardle-7b4b621b4/" }
   ]
-
