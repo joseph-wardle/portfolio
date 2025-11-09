@@ -1,19 +1,24 @@
 ---
 title: "Honey Business Pipeline"
 date: 2025-06-18
-summary: "Physically modivated film grain synthesis"
-tags: ["WGPU", "Rust"]
+summary: "USD based pipeline solution for Honey Business"
+tags: ["USD", "TD", "Pipeline", "ShotGrid", "Maya", "Houdini", "Nuke", "Substance"]
 weight: 1
 ---
 
-This project is a custom DCC-agnostic production pipeline I helped build for the short film *Honey Business* by the BYU Center for Animation. It buildes upon [Scott Milner's](https://www.linkedin.com/in/sdmilner/) work for the short film's *Student Accomplice* and *Love and Gold*. Go read Scott's [pipeline overview](https://scottdmilner.github.io/code-projects/dungeon-pipeline/) for an in depth summary of the core systems design. The fantastic [Dallin Clark](https://www.linkedin.com/in/dallin-clark1/) contributed heavily to the pipeline as well. I was brought in to work on the last half of production.
+This project is a custom DCC-agnostic production pipeline I helped build for the short film *Honey Business* by the BYU Center for Animation. It buildes upon [Scott Milner's](https://www.linkedin.com/in/sdmilner/) work for the short film's [*Student Accomplice*](https://youtu.be/mM5pBgfEhP4?si=76aHx6uTfAjYnhK5) and *Love and Gold*. Go read Scott's [pipeline overview](https://scottdmilner.github.io/code-projects/dungeon-pipeline/) for an in depth summary of the core systems design. Development of *Honey Business* began in October 2024. The fantastic [Dallin Clark](https://www.linkedin.com/in/dallin-clark1/) was solely responsible for maintaining the pipeline until I was brought in September of 2025. You can read about his contributions to this project on his [portfolio](https://dallinclark.com/).
 
-The pipeline is affectionately known as "Bobo" within the studio. It is a full production framework built around **USD** and **ShotGrid**, designed to streamline asset management, publishing, and scene assembly. It's purpose is to standardize workflows across **Maya**, **Houdini**, **Nuke**, and **Substance Painter/Designer**, enabling artists to focus on creativity while ensuring consistency and efficiency throughout the production pipeline.
+The pipeline is a full production framework built around **USD** and **ShotGrid**, designed to streamline asset management, publishing, and scene assembly. It's purpose is to standardize workflows across **Maya**, **Houdini**, **Nuke**, and **Substance Painter/Designer**, enabling artists to focus on creativity while ensuring consistency and efficiency throughout the production pipeline.
 
 This is a summary of the systems and tools I helped build and improve!
 
+### Unified publication
 
-TEMPT SUMMARY OF THE PROJECT
+The core of the pipeline revolves around Houdini, as its first class support for USD is powerful, flexible, and approacable. Many of the USD layers are exported from Houdini. However, this required assets from Maya to be published twice, once from Maya and once from Houdini. No longer! I refactored the Maya publishing framework to construct the expected Houdini asset structure directly from Maya. Now, when an asset is published from Maya, it generates the necessary USD files and directory structure that Houdini expects. This eliminates the need for a second publish step in Houdini, streamlining the workflow and reducing potential errors or inconsistencies between the two DCCs.
+
+### Multiple Environment Support
+
+However, *Honey Business* takes place in a single, massive outdoor environment. This environment does have distinct areas, however. To make iteration and responsibility more clear across production, we split this environment into multiple pieces that can be worked on independantly. However, our existing pipeline assumed a single environment per shot. I extended the pipeline to support multiple environments per shot. This involved updating the shot file manager to recognize and load multiple environment assets, as well as modifying the publishing tools to handle environment-specific data correctly. Now, artists can work on different parts of the environment without interfering with each other, while still maintaining a cohesive overall scene.
 
 **Workflow & Architecture**
 - Launchers hand off to the CLI entry point, dynamically loading the requested DCC implementation via `find_implementation` and passing along CLI logging controls.
