@@ -1,0 +1,40 @@
+/* Gruvbox scheme */
+:root {
+    --color-neutral: 251, 241, 199; /* light0 #fbf1c7 */
+
+    /* Neutrals (light ➜ dark) */
+    --color-neutral-50: 251, 241, 199; /* light0  #fbf1c7 */
+    --color-neutral-100: 235, 219, 178; /* light1  #ebdbb2 */
+    --color-neutral-200: 213, 196, 161; /* light2  #d5c4a1 */
+    --color-neutral-300: 189, 174, 147; /* light3  #bdae93 */
+    --color-neutral-400: 168, 153, 132; /* light4  #a89984 */
+    --color-neutral-500: 124, 111, 100; /* dark4  #7c6f64 */
+    --color-neutral-600: 102, 92, 84; /* dark3  #665c54 */
+    --color-neutral-700: 80, 73, 69; /* dark2  #504945 */
+    --color-neutral-800: 60, 56, 54; /* dark1  #3c3836 */
+    --color-neutral-900: 29, 32, 33; /* dark0_hard #1d2021 */
+
+    /* Primary: Gruvbox Blue (teal-ish) */
+    --color-primary-50: 232, 244, 243;
+    --color-primary-100: 210, 230, 228;
+    --color-primary-200: 180, 210, 208;
+    --color-primary-300: 151, 189, 187;
+    --color-primary-400: 131, 165, 152; /* bright blue #83a598 */
+    --color-primary-500: 100, 149, 144;
+    --color-primary-600: 69, 133, 136; /* blue #458588 */
+    --color-primary-700: 56, 113, 116;
+    --color-primary-800: 46, 93, 96;
+    --color-primary-900: 36, 73, 75;
+
+    /* Secondary: Gruvbox Aqua (green-cyan) */
+    --color-secondary-50: 236, 247, 233;
+    --color-secondary-100: 214, 236, 207;
+    --color-secondary-200: 189, 224, 181;
+    --color-secondary-300: 166, 211, 157;
+    --color-secondary-400: 142, 192, 124; /* bright aqua #8ec07c */
+    --color-secondary-500: 123, 175, 113;
+    --color-secondary-600: 104, 157, 106; /* aqua #689d6a */
+    --color-secondary-700: 87, 132, 88;
+    --color-secondary-800: 70, 106, 71;
+    --color-secondary-900: 54, 82, 56;
+}
