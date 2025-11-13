@@ -36,10 +36,12 @@
   name: "Pipeline TD — Student Capstone Film",
   url: "github.com/joseph-wardle/bobo-pipeline"
 )
-- Maintain and extend a film-scale, OS-agnostic *USD* pipeline used by 40+ artists across *Linux* and Windows.
-- Develop tools for Houdini, Maya, and Nuke to automate repetitive tasks, including a cross DCC snapshot tool backed by per asset Git repositories to simplify asset versioning for artists.
-- Implemented a unified publish tool across DCCs, including automatic render submissions through *Pixar Tractor* configured for various asset types including playblasts, turntables, and final renders.
-- Currently transitioning production asset management to *Perforce* with a unified bot account and cross DCC tooling; automate CI/CD actions with *TeamCity* to improve reliability and traceability.
+- *Maintain and extend a film-scale, OS-agnostic USD* pipeline used by 40+ artists across *Linux* and Windows.
+- Built an automatic proxy tool for point instanced USD assets (foliage) to *improve viewport performance by 70x*.
+- Developed automated rendering tools using *Renderman and Pixar Tractor* on a 88-node render farm.
+- Wrote a series of *MEL* scripts to correct and modify large sets of environment assets.
+- Built a unified publishing tool that auto generates Houdini-ready USD assets and `.hipnc` files from any DCC.
+- Developed *PyQT* tools to streamline artist workflows; integrated with *Flow Production Tracking System*.
 ]
 
 #box(
@@ -54,7 +56,7 @@
   company: "Brigham Young University — Computer Science Department",
   dates: dates-helper(start-date: "March 2025", end-date: "Present"),
 )
-- Engineer and maintain department web services as containerized *Django* applications.
+- Engineer and maintain department web services as *Django* applications using SWIFT development practices
 - Design REST endpoints and internal admin UIs for non-technical users.
 - Build *CI/CD pipelines* for test, image build, and deploy; local dev with *Docker Compose*; deploy to *Kubernetes*.
 - Operate in *Linux* environments; instrument health checks and structured logging to simplify ops troubleshooting.
@@ -77,7 +79,7 @@
   url: "josephwardle.com"
 )
 - Run *Fedora Server* services (*Podman*\/*Quadlet*, *systemd*); reverse proxy + TLS via *Caddy/NGINX*.
-- Configure backups/archival for services and media; manage secrets/volumes; routine maintenance and upgrades.
+- Configure backups/archival for services and media (Perforce, UE Zen, Website, Media Server, Password management)
 
 #project(
   dates: dates-helper(start-date: "March 2025", end-date: "August 2025"),
@@ -93,7 +95,8 @@
   url: "github.com/joseph-wardle/film_grain"
 )
 - Implemented physically motivated film-grain rendering (Newson et al., 2017) with GPU *compute shaders*.
-- Written in *Rust* with *WGPU*; benchmarked on the Vulkan backend; achieved substantial speedups versus a baseline.
+- *Improved performance from the original paper by up to 90x* for grain-wise and *20x* for pixel-wise.
+- Written in *Rust* with *WGPU compute shaders*; benchmarked on the Vulkan backend;
 
 
 == Education
@@ -110,9 +113,9 @@
 
 == Skills
 
-- *Languages:* Python (Django/REST), C++20/23, Rust, Bash, Java, C\#, HTML/CSS
-- *Systems:* Linux, systemd/Quadlet, Kubernetes, Podman/Docker, NGINX/Caddy
-- *CI/CD & Deploy:* GitHub Actions, Jenkins, TeamCity
-- *Render & Pipeline:* USD, Pixar Tractor, Houdini, Maya, Nuke, Perforce
+- *Languages:* Python, MEL, C++20/23, Rust, Bash, Java, C\#, HTML/CSS
+- *Systems:* Linux, Windows, systemd/Quadlet, Kubernetes, Podman/Docker, NGINX/Caddy
+- *CI/CD & Deploy:* GitHub Actions, Jenkins, TeamCity, Git, Perforce
+- *Render & Pipeline:* USD, Pixar Tractor, Houdini, Maya, Nuke, Perforce, Flow Production Tracking System (Shotgrid)
 - *Other Software:* Unreal Engine, Unity, Adobe, Jira, Confluence
 
