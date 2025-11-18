@@ -124,3 +124,8 @@ forgejoDefaultServer = "https://v11.next.forgejo.org"
   groupByYear = false
   cardView = false
   cardViewScreenWidth = false
+
+  [umamiAnalytics]
+    websiteid = "654ac0b1-7909-410a-a21e-c21d025a36d8"
+    domain = "stats.josephwardle.com"
+    enableTrackEvent = true
