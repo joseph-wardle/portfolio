@@ -10,6 +10,15 @@ weight: 1
 
 I joined the project as its sole pipeline TD in late 2025 and have since written over 20,000 lines of production Python across the full stack: asset management, cross-DCC publishing, render telemetry, and per-DCC artist tooling. Every system described here is live in production today, and more are in active development.
 
+> **At a glance**
+> - Sole TD on a 50+ artist animated feature film
+> - 20,000+ lines of production Python, all systems live in production
+> - One-click cross-DCC publish: Maya or Substance Painter → headless Houdini → ShotGrid, zero manual steps
+> - Automatic asset versioning with content-addressed backups and full publish audit trail
+> - USD geometry and material variant graph generation — auto-built and maintained from publish directory structure, no configuration files
+> - Full render telemetry stack: async event spooling, per-frame render stats, Tractor farm utilization monitoring
+> - ShotGrid-integrated playblast pipeline with DNxHD/H.264 encoding, shared across Maya and Houdini
+
 ---
 
 ### Unified Publish
@@ -94,7 +103,7 @@ The variant system handles this automatically. A `VariantBuildPlan` is derived b
 
 ### Telemetry
 
-Running a 50-artist production blind is a support nightmare. As fun as having ping pong conversatins with artists via tickets can be ("I need more information than 'it doesnt work'"), I've developed he telemetry system provides that visibility to these issues.
+Running a 50-artist production blind is a support nightmare. As fun as having ping pong conversations with artists via tickets can be ("I need more information than 'it doesnt work'"), the telemetry system provides that visibility.
 
 Every significant pipeline action emits a structured event: asset publishes, texture exports, headless Houdini builds, playblasts, render farm submissions, and file opens. Events carry a stable schema — status, error code, duration, action ID, and a payload specific to the event type — and are written asynchronously to a per-machine JSONL spool file that flushes in the background. A separate background process harvests completed render jobs from Tractor: it tails render logs with regex patterns tuned for Husk and RenderMan output, extracts per-frame render times and peak memory usage, and emits a `render.stats.summary` event per job. A second daemon polls the Tractor engine API on a regular interval and emits `tractor.farm.snapshot` events capturing queue depth and blade utilization.
 
