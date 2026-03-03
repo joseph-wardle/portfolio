@@ -34,7 +34,7 @@
 #project(
   dates: dates-helper(start-date: "October 2025", end-date: "Present"),
   name: "Pipeline TD",
-  url: "github.com/joseph-wardle/bobo-pipeline"
+  url: "github.com/joseph-wardle/sandwich-pipeline"
 )
 
 - *Maintain and extend a film-scale, OS-agnostic USD* pipeline used by 40+ artists across *Linux* and Windows.
