@@ -14,10 +14,10 @@ I joined the project as its sole pipeline TD in late 2025 and have since written
 > - Sole TD on a 50+ artist animated feature film
 > - 20,000+ lines of production Python, all systems live in production
 > - One-click cross-DCC publish: Maya or Substance Painter → headless Houdini → ShotGrid, zero manual steps
+> - ShotGrid-integrated playblast pipeline with DNxHD/H.264 encoding, shared across Maya and Houdini
+> - Full render telemetry stack: async event spooling, per-frame render stats, Tractor farm utilization monitoring
 > - Automatic asset versioning with content-addressed backups and full publish audit trail
 > - USD geometry and material variant graph generation — auto-built and maintained from publish directory structure, no configuration files
-> - Full render telemetry stack: async event spooling, per-frame render stats, Tractor farm utilization monitoring
-> - ShotGrid-integrated playblast pipeline with DNxHD/H.264 encoding, shared across Maya and Houdini
 
 ---
 
@@ -49,7 +49,7 @@ If artists want to inspect or modify the generated USD graph, they can open the 
 >}}
 
  I also created custom wrappers for the solaris component builder nodes. Noteably, the Material Library node auto generates entire material networks based on the material variants defined in the asset's publish directory, which can then be customized as needed. in addition to the PxrMixer shader that will be used for renders, this node automatically creates a USDPreview material with each UDIM shrunk to fit within the 0-1 UV space, allowing just three textures to drive viewport materials: diffuse, roughness, and metallic. This keeps viewport performance high without sacrificing too much visual fidelity.
- 
+
 {{< figure
   src="unified_publish/houdini_material_network.png"
   caption="The generated PxrMaterialBuilder node graph generated."
@@ -60,6 +60,41 @@ Further asset publication can be customized in the SKD component output node, al
 {{< figure
   src="unified_publish/houdini_component_output.png"
   caption="A peek at the custom SKD component output node UI"
+>}}
+
+---
+
+### Playblast Pipeline
+
+Before I rewrote it, the playblast workflow produced files that lived on a local drive and had to be manually uploaded to ShotGrid. This process was error prone and a significant time sink for our frequent dalies review schedule.
+
+The new playblast tool is a full Qt UI that handles encoding, naming, and delivery. Artists select a shot, choose a department (animation, layout, lighting), configure HUD elements, and hit record. The tool uses FFmpeg to encode the playblast, with DNxHD SQ or DNxHD HQX presets for editorial handoff, or H.264 for web review. It derives a version name from the shot and timestamp, creates a ShotGrid Version record linked to the shot, and uploads the movie. Artists and team leads see it in ShotGrid immediately. The tool emits telemetry on completion and failure, so broken playblasts are visible in the dashboard.
+
+A slightly different version of the tool is avalible in maya for previs artists and animators, and a matching tool lives in houdini for FX artists, layout artists, and lighting artists. All tools share the same backend code for encoding and ShotGrid delivery.
+
+{{< figure
+  src="playblast/previs_playblast.png"
+  caption="The playblast UI in Maya for previs artists"
+>}}
+
+{{< figure
+  src="playblast/fx_playblast.png"
+  caption="The playblast UI in Maya for FX artists"
+>}}
+
+---
+
+### Telemetry
+
+Running a 50-artist production blind is a support nightmare. As fun as having ping pong conversations with artists via tickets can be ("I need more information than 'it doesnt work'"), the telemetry system provides that visibility.
+
+Every significant pipeline action emits a structured event: asset publishes, texture exports, headless Houdini builds, playblasts, render farm submissions, and file opens. Events carry a stable schema — status, error code, duration, action ID, and a payload specific to the event type — and are written asynchronously to a per-machine JSONL spool file that flushes in the background. A separate background process harvests completed render jobs from Tractor: it tails render logs with regex patterns tuned for Husk and RenderMan output, extracts per-frame render times and peak memory usage, and emits a `render.stats.summary` event per job. A second daemon polls the Tractor engine API on a regular interval and emits `tractor.farm.snapshot` events capturing queue depth and blade utilization.
+
+I'm currently building the dashboard to surface all of this. The data infrastructure is complete.
+
+{{< figure
+  src="telemetry/telemetry_event_detail.png"
+  caption="Example telemetry events from a Maya playblast."
 >}}
 
 ---
@@ -96,42 +131,6 @@ The variant system handles this automatically. A `VariantBuildPlan` is derived b
 {{< figure
   src="variants/auto-generated-variant-network.png"
   caption="Auto-generated variant graph for an asset with five geometry variants and five material variants each."
->}}
-
-
----
-
-### Telemetry
-
-Running a 50-artist production blind is a support nightmare. As fun as having ping pong conversations with artists via tickets can be ("I need more information than 'it doesnt work'"), the telemetry system provides that visibility.
-
-Every significant pipeline action emits a structured event: asset publishes, texture exports, headless Houdini builds, playblasts, render farm submissions, and file opens. Events carry a stable schema — status, error code, duration, action ID, and a payload specific to the event type — and are written asynchronously to a per-machine JSONL spool file that flushes in the background. A separate background process harvests completed render jobs from Tractor: it tails render logs with regex patterns tuned for Husk and RenderMan output, extracts per-frame render times and peak memory usage, and emits a `render.stats.summary` event per job. A second daemon polls the Tractor engine API on a regular interval and emits `tractor.farm.snapshot` events capturing queue depth and blade utilization.
-
-I'm currently building the dashboard to surface all of this. The data infrastructure is complete.
-
-{{< figure
-  src="telemetry/telemetry_event_detail.png"
-  caption="Example telemetry events from a Maya playblast."
->}}
-
----
-
-### Playblast Pipeline
-
-Before I rewrote it, the playblast workflow produced files that lived on a local drive and had to be manually uploaded to ShotGrid. This process was error prone and a significant time sink for our frequent dalies review schedule.
-
-The new playblast tool is a full Qt UI that handles encoding, naming, and delivery. Artists select a shot, choose a department (animation, layout, lighting), configure HUD elements, and hit record. The tool uses FFmpeg to encode the playblast, with DNxHD SQ or DNxHD HQX presets for editorial handoff, or H.264 for web review. It derives a version name from the shot and timestamp, creates a ShotGrid Version record linked to the shot, and uploads the movie. Artists and team leads see it in ShotGrid immediately. The tool emits telemetry on completion and failure, so broken playblasts are visible in the dashboard.
-
-A slightly different version of the tool is avalible in maya for previs artists and animators, and a matching tool lives in houdini for FX artists, layout artists, and lighting artists. All tools share the same backend code for encoding and ShotGrid delivery.
-
-{{< figure
-  src="playblast/previs_playblast.png"
-  caption="The playblast UI in Maya for previs artists"
->}}
-
-{{< figure
-  src="playblast/fx_playblast.png"
-  caption="The playblast UI in Maya for FX artists"
 >}}
 
 ---
