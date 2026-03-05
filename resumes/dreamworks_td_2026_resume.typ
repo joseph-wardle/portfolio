@@ -9,6 +9,8 @@
 
 #let offwhite = rgb("#e9ecf0")
 
+
+
 #show: resume.with(
   author: name,
   location: location,
@@ -23,6 +25,8 @@
   personal-info-position: left,
 )
 
+#set text(size: 9.872pt)
+
 == Work Experience
 
 #box(
@@ -31,13 +35,15 @@
   radius: 4pt,       // rounded corners (optional)
   width: 100%,       // span text width
 )[
-#project(
+
+#work(
+  title: "Pipeline TD - 'Sandwich Kwon Do' and 'Honey Business'",
+  location: "Provo, UT",
+  company: "Brigham Young University — Animation Department Capstone Films",
   dates: dates-helper(start-date: "October 2025", end-date: "Present"),
-  name: "Pipeline TD",
-  url: "github.com/joseph-wardle/sandwich-pipeline"
 )
 
-- *Maintain and extend a film-scale, OS-agnostic USD* pipeline used by 40+ artists across *Linux* and Windows.
+- *Maintain and extend a film-scale, OS-agnostic USD* pipeline used by 50+ artists across *Linux* and Windows.
 - Author *Qt* (PySide2) artist tools across *Maya*, *Houdini*, *Nuke*, and *Substance Painter*; integrated with *ShotGrid* for asset registration, version tracking, and automatic playblasts for dailies
 - Built a telemetry system harvesting per-frame render times, memory usage from *Husk* and *RenderMan* via *Pixar Tractor* on an 107-node farm
 - Engineered a unified publish: *Maya* and *Substance Painter* invoke *Houdini* subprocess to assemble a USD asset
@@ -72,14 +78,21 @@
 
 == Projects
 
+#box(
+  fill: offwhite,
+  inset: 8pt,        // padding
+  radius: 4pt,       // rounded corners (optional)
+  width: 100%,       // span text width
+)[
 #project(
   dates: dates-helper(start-date: "2023", end-date: "Present"),
   name: "Javelin - Real-Time Rigid Body Physics Engine",
   url: "github.com/joseph-wardle/javelin"
 )
-- Build a real-time rigid body simulator from scratch in *C++23*; handles *5,000+ concurrent dynamic bodies* at 60 Hz.
+- Build a rigid body simulator from scratch in *C++23*; handles *5,000+ concurrent dynamic bodies* at 60 Hz.
 - Multithreaded broad phase (dynamic/static BVH), SAT + GJK narrow phase with contact manifolds, warm-started projected Gauss-Seidel solver; Tracy integration for per-tick diagnostics, profiling, and telemetry.
-- Implemented in *C++23 named modules* throughout; custom math library (vec3, mat3, mat4, quat); lock-free atomics for pause / resume and manual step control from the render thread
+- Implemented in *C++23 named modules* throughout; custom math library (vec3, mat3, mat4, quat); lock-free atomics for manual step control from the render thread. *ImGUI* used for runtime developer UI
+]
 
 #project(
   dates: dates-helper(start-date: "March 2025", end-date: "August 2025"),
@@ -106,13 +119,12 @@
   dates: dates-helper(start-date: "Aug 2023", end-date: "Expected May 2027"),
   degree: "Bachelor of Science, Computer Science (Animation & Games Emphasis)",
 )
-- Cumulative GPA: 3.95/3.96
-- Relevant Coursework: Data Structures, Multithreading, Linear Algebra, Modeling, Rigging, Shading, FX
+- Relevant Coursework: Data Structures, Multithreading, Linear Algebra, Modeling, Rigging, Shading, FX (3.95 GPA)
 
 
 == Skills
 
-- *Languages:* Python, MEL, C++20/23, Rust, Bash, Java, C\#, HTML/CSS
+- *Languages and Systems:* Python, MEL, C++23, Rust, Bash, Java, C\#, HTML/CSS
 - *Systems:* Linux, Windows, systemd/Quadlet, Kubernetes, Podman/Docker, NGINX/Caddy
 - *CI/CD & Deploy:* GitHub Actions, Jenkins, TeamCity, Git, Perforce
 - *Render & Pipeline:* USD, Pixar Tractor, Houdini, Maya, Nuke, Perforce, Shotgrid, MoonRay
