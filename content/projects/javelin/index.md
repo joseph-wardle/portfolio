@@ -6,7 +6,8 @@ tags: ["C++23", "Physics", "Simulation", "OpenGL", "Rendering", "Tracy"]
 weight: 2
 ---
 
-Javelin is a real-time rigid body physics engine written from scratch in **C++23**, using named modules throughout. It handles spheres and oriented boxes, resolves contacts with a warm-started projected Gauss-Seidel solver, supports XPBD-style distance constraints, and uses sleep/wake island management for stable large stacks. Broad phase uses a dual-BVH design with deterministic parallel dispatch, and a custom OpenGL renderer provides both scene output and deep debug overlays. A text scene format (`.jvscene`) keeps authoring and inspection simple without editor tooling.
+Javelin is a real-time rigid body physics engine written from scratch in **C++23**, using named modules throughout. It handles spheres and oriented boxes, resolves contacts with a warm-started projected Gauss-Seidel solver, supports XPBD-style distance constraints, and tracks sleep/wake islands to keep large stacks stable. The broad phase uses a dual-BVH design with deterministic parallel dispatch, a custom OpenGL renderer handles scene output and debug overlays, and scenes are authored in a plain-text format (`.jvscene`) that stays readable without any tooling.
+
 
 {{< figure
   src="demo/5k_bodies.png"
@@ -19,7 +20,7 @@ Javelin is a real-time rigid body physics engine written from scratch in **C++23
 
 ### Architecture
 
-The engine runs a fixed 60 Hz physics loop on a dedicated `std::jthread`. The render thread reads simulation state through a triple-buffered **pose channel**: physics writes authoritative transforms once per tick, then publishes atomic buffer indices; render samples previous/current snapshots for interpolation without blocking physics.
+The engine runs a fixed 60 Hz physics loop on a dedicated `std::jthread`. A fixed timestep gives deterministic, reproducible behavior and a comfortable budget for the solver. The render thread reads simulation state through a triple-buffered **pose channel**: physics writes authoritative transforms once per tick and publishes atomic buffer indices; the render thread samples the previous and current snapshots for interpolation without ever blocking physics.
 
 Each physics tick follows a strict staged pipeline:
 
@@ -34,11 +35,11 @@ Each physics tick follows a strict staged pipeline:
 
 ### Broad Phase
 
-The broad phase uses two BVHs: a **dynamic BVH** for dynamic bodies and a **static BVH** for static bodies. Dynamic leaves are fattened so small motions avoid remove/reinsert churn; updates are skipped when the fat bounds still contain the new tight AABB.
+The goal of the broad phase is to generate a list of shape pairs that might be in contact — quickly and without missing anything. Javelin uses two BVHs for this: a **dynamic BVH** for moving bodies and a **static BVH** for the environment. Dynamic leaves are fattened so that small motions don't trigger a remove/reinsert; updates are skipped entirely when the fat bounds still contain the new tight AABB.
 
-Queries use an incremental policy: by default only **moved awake** bodies query; if movement ratio is high, it falls back to a full awake-body query. Previous manifold pairs can be carried forward and revalidated for overlap to avoid missing persistent contacts in moved-only frames.
+Queries use an incremental policy: by default only **moved awake** bodies query the static BVH. When movement ratio is high, it falls back to a full awake-body query. Previous manifold pairs can be carried forward and revalidated for overlap, catching persistent contacts that a moved-only query might otherwise miss.
 
-Parallel dispatch uses a persistent worker pool with contiguous chunks and deterministic merge order. Candidate pairs are canonicalized (`min_id, max_id`), sorted, and deduplicated before narrow phase.
+Parallel dispatch uses a persistent worker pool with contiguous chunks and deterministic merge order. Candidate pairs are canonicalized (`min_id, max_id`), sorted, and deduplicated before the narrow phase sees them.
 
 Dedicated benchmarks cover dynamic BVH microperformance and broad-phase dispatch tuning under controlled workloads.
 
@@ -70,11 +71,11 @@ Every contact point carries a **feature ID** and each manifold carries a manifol
 
 ### Manifold Persistence and Warm Starting
 
-A naive solver that discards contact history every tick converges slowly and jitters in resting stacks.
+A naive solver that discards contact history every tick converges slowly and jitters in resting stacks. The fix is to carry contact data across frames and reuse it.
 
-Javelin persists manifolds across frames. At the start of each tick, contact points in the new manifolds are matched against their counterparts from the previous frame. Matching uses feature IDs first (a point with the same edge or face feature is the same contact point), then falls back to minimum local-anchor distance. A matched point inherits the previous frame's accumulated normal and friction impulses, which are applied as a **warm start** at the beginning of the solve.
+Javelin persists manifolds across frames. At the start of each tick, contact points in the new manifolds are matched against their counterparts from the previous frame — using feature IDs first (a point with the same edge or face feature is the same contact point), then falling back to minimum local-anchor distance. A matched point inherits the previous frame's accumulated normal and friction impulses, which are applied as a **warm start** at the beginning of the solve. This gives the solver a head start every tick rather than working from zero.
 
-Cached points are dropped when anchor drift, normal drift, or tangential drift exceed thresholds. Entire manifold caches are invalidated when selected manifold axis/normal changes too much between frames. The system tracks match rate, dropped points, axis-flip count, and cache invalidations in Tracy plots.
+Cached points are dropped when anchor drift, normal drift, or tangential drift exceed thresholds. Entire manifold caches are invalidated when the manifold axis/normal changes too much between frames. The system tracks match rate, dropped points, axis-flip count, and cache invalidations in Tracy plots.
 
 {{< figure
   src="persistence/warm_start_match_rate.png"
@@ -87,19 +88,19 @@ Cached points are dropped when anchor drift, normal drift, or tangential drift e
 
 Contact solving uses two passes:
 
-**Velocity pass (projected Gauss-Seidel):** Each point solves normal + two tangent directions with Coulomb friction, penetration bias, restitution thresholding, and warm-started accumulated impulses. The default cap is 16 iterations, with adaptive early-out and higher caps for complex islands/contact sets.
+**Velocity pass (projected Gauss-Seidel):** Each point solves normal and two tangent directions with Coulomb friction, penetration bias, restitution thresholding, and warm-started accumulated impulses. The default cap is 16 iterations, with adaptive early-out and higher caps for complex islands.
 
-**Position pass (4 iterations):** Residual penetration is corrected through direct positional/orientational correction, preventing long-term sinking.
+**Position pass (4 iterations):** Residual penetration is corrected through direct positional and orientational adjustment, preventing long-term sinking.
 
-Distance constraints are solved after contacts with an XPBD-style compliant formulation (`compliance = 0` behaves like a rigid link). Resting-contact velocity clamping and sleep timers then suppress residual jitter while preserving genuine low-speed motion.
+Distance constraints are solved after contacts using an XPBD-style compliant formulation — `compliance = 0` behaves like a rigid link. Resting-contact velocity clamping and sleep timers then suppress residual jitter while preserving genuine low-speed motion.
 
 ---
 
-### Sleeping and Constraints
+### Sleep and Constraints
 
-The engine tracks connected dynamic components (contacts + constraints) and maintains persistent **sleep islands**. Wake propagation occurs across active edges; sleeping occurs island-wide only after velocity/timer criteria are met. This avoids one-body wake/sleep thrash in constrained structures and stacked piles.
+The engine tracks connected dynamic components (via contacts and constraints) and maintains persistent **sleep islands**. Wake propagation occurs across active edges; sleep occurs island-wide only after velocity and timer criteria are met. This avoids the one-body wake/sleep thrash you'd see with per-body sleeping in constrained structures or stacked piles.
 
-Distance constraints are authored directly in `.jvscene` files and support local anchors, rest length, and compliance for rigid or softened links. This enables scenes like Newton's cradle and pendulum-driven destruction setups without adding a full joint stack.
+Distance constraints are authored directly in `.jvscene` files and support local anchors, rest length, and compliance for rigid or softened links. This is enough to build Newton's cradle setups and pendulum-driven destruction scenes without a full joint stack.
 
 ---
 
@@ -116,9 +117,9 @@ The renderer is an OpenGL 4.6 rasterizer with a fixed pass pipeline:
 7. **VelocityDebugPass**
 8. **DisplayPass**
 
-Geometry is instanced (sphere/cube primitives) using streamed per-instance transform, scale, orientation, and material data from the latest pose snapshot. Debug overlays are individually toggleable from the ImGui runtime UI.
+Geometry is instanced (sphere/cube primitives) using streamed per-instance transform, scale, orientation, and material data from the latest pose snapshot. Debug overlays are individually toggleable from the ImGui UI.
 
-Final display uses an OCIO-generated ACEScg-to-sRGB transform shader + LUTs, with a bypass option for raw scene color. Tracy GPU zones instrument each pass and present stage.
+Final display uses an OCIO-generated ACEScg-to-sRGB transform shader and LUTs, with a bypass option for raw scene color. Tracy GPU zones instrument each pass and present stage.
 
 {{< figure
   src="rendering/grid_boxes.png"
@@ -129,26 +130,22 @@ Final display uses an OCIO-generated ACEScg-to-sRGB transform shader + LUTs, wit
 
 ### Scene Tooling and Capture
 
-Scenes are authored in a strict, grep-friendly text format (`.jvscene`) with:
-- `physics_material` records (restitution, friction, density),
-- sphere/box shapes,
-- static/dynamic bodies,
-- distance constraints (anchors, rest length, compliance).
+Scenes are authored in a strict, grep-friendly text format (`.jvscene`) with physics material records (restitution, friction, density), sphere and box shapes, static and dynamic bodies, and distance constraints. The format is deliberately plain — readable in any text editor and diffable in version control.
 
 The project includes:
 - `scene_tool` for normalization and deterministic round-trip verification,
-- `scene_capture` for deterministic offline capture with asynchronous readback/writer pipelines and manifest output,
+- `scene_capture` for offline capture with async readback/writer pipelines and manifest output,
 - procedural scene generation scripts for large reproducible stress scenes.
 
 ---
 
-### C++23 Modules and Codebase Structure
+### C++23 Modules
 
-The entire codebase uses C++23 **named modules** (`export module javelin.physics.solver;`, `import javelin.physics.types;`) rather than headers. This enforces clean separation of interface from implementation, eliminates include-order dependencies, and keeps compile times predictable as the codebase grows. It also means every module boundary is an explicit contract.
+The entire codebase uses C++23 **named modules** (`export module javelin.physics.solver;`, `import javelin.physics.types;`) rather than headers. This enforces clean separation of interface from implementation, eliminates include-order dependencies, and keeps compile times predictable as the codebase grows. Every module boundary is an explicit contract.
 
 The math library (`vec2`, `vec3`, `vec4`, `mat3`, `mat4`, `quat`) is implemented from scratch in the same module system. Quaternion integration uses the derivative form `q' = 0.5 * ω * q` for correct orientation stepping.
 
-The repository also ships focused benchmarks (dynamic BVH, contact solver kernel, manifold persistence, sleep-aware collision, island sleep/wake, broad-phase dispatch tuning), plus a performance harness for before/after drift gating with benchmark JSON and Tracy CSV exports.
+The repository also ships focused benchmarks covering dynamic BVH microperformance, contact solver kernels, manifold persistence, sleep-aware collision, island sleep/wake, and broad-phase dispatch — plus a performance harness for before/after drift gating with benchmark JSON and Tracy CSV exports.
 
 ---
 
