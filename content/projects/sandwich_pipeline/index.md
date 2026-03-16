@@ -3,7 +3,7 @@ title: "Sandwich Kwon Do Pipeline"
 date: 2025-12-01
 summary: "A cross-platform USD pipeline serving a 50+ artist animated feature, built from the ground up."
 tags: ["USD", "TD", "Pipeline", "ShotGrid", "Maya", "Houdini", "Substance Painter", "Python", "Tractor", "Telemetry"]
-weight: 1
+weight: 10
 ---
 
 `sandwich-pipeline` is the production backbone for *Sandwich Kwon Do*, BYU Center for Animation's 2027 capstone film. It supports five DCCs across Linux and Windows and serves more than fifty artists.
