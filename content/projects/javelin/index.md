@@ -14,8 +14,6 @@ Javelin is a real-time rigid body physics engine written from scratch in **C++23
   caption="Large-scale rigid body scene rendered from an offline deterministic capture run."
 >}}
 
-{{< youtubeLite id="YOUR_DEMO_VIDEO_ID" label="Javelin simulation demo" >}}
-
 ---
 
 ### Architecture
