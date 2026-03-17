@@ -3,7 +3,7 @@ title: "Film Grain Synthesis"
 date: 2025-06-18
 summary: "Physically motivated film grain synthesis in Rust — up to 160× faster than the C reference, with CPU multithreading and GPU compute shader backends."
 tags: ["WGPU", "Rust"]
-weight: 5
+weight: 50
 ---
 
 {{< katex >}}

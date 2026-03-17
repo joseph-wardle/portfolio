@@ -27,11 +27,49 @@ jobs:
       NODE_VERSION: 22.18.0
       TZ: America/Denver
     steps:
-      - name: Checkout
+      - name: Checkout portfolio
         uses: actions/checkout@v5
         with:
           submodules: recursive
           fetch-depth: 0
+
+      # ── Emulator WASM build ─────────────────────────────────────────────
+      # The rgb emulator lives in a separate repository.  We check it out,
+      # compile it to WebAssembly with wasm-pack, and copy the two generated
+      # files into static/emulator/ so Hugo can serve them at /emulator/.
+
+      - name: Checkout rgb emulator
+        uses: actions/checkout@v5
+        with:
+          repository: joseph-wardle/rgb
+          path: rgb-src
+
+      - name: Install Rust (stable, wasm32 target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo registry and build artefacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rgb-src/target
+          key: cargo-wasm-${{ hashFiles('rgb-src/Cargo.lock') }}
+          restore-keys: cargo-wasm-
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build emulator WASM module
+        run: |
+          cd rgb-src/rgb_web
+          wasm-pack build --target web --out-dir pkg
+          mkdir -p "$GITHUB_WORKSPACE/static/emulator"
+          cp pkg/rgb_web.js pkg/rgb_web_bg.wasm "$GITHUB_WORKSPACE/static/emulator/"
+
+      # ── Hugo build ──────────────────────────────────────────────────────
 
       - name: Setup Go
         uses: actions/setup-go@v5

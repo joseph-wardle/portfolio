@@ -1,0 +1,318 @@
+{{/*
+  gameboy.html — embeds the rgb Game Boy emulator as an interactive element.
+
+  Prerequisites: build the WASM module and copy it to static/emulator/ first:
+    cd rgb_web && ./build.sh
+*/}}
+
+<style>
+  .rgb-embed {
+    margin: 2rem 0;
+    font-family: ui-monospace, "Cascadia Code", "Fira Mono", monospace;
+  }
+  .rgb-shell {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid #3c3836;
+    background: #1d2021;
+  }
+
+  /* ── Screen ─────────────────────────────────────────────────────────── */
+  .rgb-screen {
+    background: #000;
+    display: flex;
+    justify-content: center;
+    position: relative;
+  }
+  .rgb-screen canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+  .rgb-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #504945;
+    font-size: 0.8rem;
+    pointer-events: none;
+    user-select: none;
+  }
+  .rgb-overlay svg { opacity: 0.25; }
+
+  /* ── Primary toolbar (Load ROM + key hints) ─────────────────────────── */
+  .rgb-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    background: #282828;
+    border-top: 1px solid #3c3836;
+  }
+  .rgb-load-btn {
+    cursor: pointer;
+    display: inline-block;
+    padding: 0.3rem 0.9rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 0.3rem;
+    background: #d79921;
+    color: #1d2021;
+    transition: background 0.12s;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .rgb-load-btn:hover { background: #fabd2f; }
+  .rgb-load-btn.loaded {
+    background: #504945;
+    color: #928374;
+    cursor: default;
+    font-weight: 400;
+  }
+  .rgb-hint {
+    font-size: 0.72rem;
+    color: #665c54;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .rgb-hint kbd {
+    background: #3c3836;
+    border: 1px solid #504945;
+    border-radius: 0.2rem;
+    padding: 0.05rem 0.3rem;
+    font-family: inherit;
+    font-size: inherit;
+    color: #928374;
+  }
+
+  /* ── Open-source game picker ─────────────────────────────────────────── */
+  .rgb-games {
+    padding: 0.55rem 1rem 0.65rem;
+    background: #1d2021;
+    border-top: 1px solid #3c3836;
+  }
+  .rgb-games-label {
+    display: block;
+    font-size: 0.68rem;
+    color: #504945;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.5rem;
+    user-select: none;
+  }
+  .rgb-games-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .rgb-game-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .rgb-game-btn {
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid #504945;
+    border-radius: 0.3rem;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.8rem;
+    font-family: inherit;
+    color: #a89984;
+    transition: border-color 0.12s, color 0.12s;
+    white-space: nowrap;
+  }
+  .rgb-game-btn:hover {
+    border-color: #928374;
+    color: #ebdbb2;
+  }
+  .rgb-game-btn:disabled {
+    cursor: default;
+    border-color: #3c3836;
+    color: #504945;
+  }
+  .rgb-game-credit {
+    font-size: 0.65rem;
+    color: #504945;
+    padding-left: 0.1rem;
+    white-space: nowrap;
+  }
+  .rgb-game-credit a {
+    color: #665c54;
+    text-decoration: none;
+  }
+  .rgb-game-credit a:hover {
+    color: #928374;
+    text-decoration: underline;
+  }
+</style>
+
+<div class="rgb-embed not-prose">
+  <div class="rgb-shell">
+
+    {{/* Screen: pre-placed canvas at native 4× scale (640×576).
+         winit attaches to this element by id="rgb-canvas".
+         max-width:100% + height:auto in CSS makes it responsive. */}}
+    <div class="rgb-screen">
+      <canvas id="rgb-canvas" width="640" height="576"></canvas>
+      <div class="rgb-overlay" id="rgb-overlay">
+        {{/* Simple Game Boy silhouette icon */}}
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="6" width="32" height="36" rx="5" fill="#ebdbb2"/>
+          <rect x="12" y="10" width="24" height="16" rx="2" fill="#282828"/>
+          <circle cx="34" cy="34" r="4" fill="#cc241d"/>
+          <circle cx="26" cy="34" r="4" fill="#458588"/>
+          <rect x="14" y="31" width="3" height="8" rx="1.5" fill="#504945"/>
+          <rect x="11" y="34" width="9" height="3" rx="1.5" fill="#504945"/>
+          <rect x="20" y="38" width="8" height="2" rx="1" fill="#504945"/>
+        </svg>
+        <span>load a .gb rom to play</span>
+      </div>
+    </div>
+
+    {{/* Primary toolbar — Load ROM is the main action */}}
+    <div class="rgb-toolbar">
+      <label class="rgb-load-btn" for="rgb-rom-input" id="rgb-load-label">
+        Load ROM
+      </label>
+      <input type="file" id="rgb-rom-input" accept=".gb,.bin" style="display:none;">
+      <span class="rgb-hint">
+        <kbd>↑↓←→</kbd> d-pad &nbsp;·&nbsp;
+        <kbd>Z</kbd> B &nbsp;·&nbsp;
+        <kbd>X</kbd> A &nbsp;·&nbsp;
+        <kbd>Enter</kbd> Start &nbsp;·&nbsp;
+        <kbd>⇧</kbd> Select
+      </span>
+    </div>
+
+    {{/* Game picker — secondary, visually muted */}}
+    <div class="rgb-games">
+      <span class="rgb-games-label">or try an open-source game</span>
+      <div class="rgb-games-list">
+
+        <div class="rgb-game-item">
+          <button class="rgb-game-btn" data-src="/roms/tobu-tobu-girl-deluxe.gb" data-title="Tobu Tobu Girl DX">
+            Tobu Tobu Girl DX
+          </button>
+          <span class="rgb-game-credit">
+            <a href="https://tangramgames.itch.io/tobu-tobu-girl-deluxe" target="_blank" rel="noopener">TangramGames</a>
+            &nbsp;·&nbsp;MIT + CC BY 4.0
+          </span>
+        </div>
+
+        <div class="rgb-game-item">
+          <button class="rgb-game-btn" data-src="/roms/geometrix.gb" data-title="Geometrix">
+            Geometrix
+          </button>
+          <span class="rgb-game-credit">
+            <a href="https://github.com/AntonioND/geometrix" target="_blank" rel="noopener">AntonioND</a>
+            &nbsp;·&nbsp;GPL-3.0
+          </span>
+        </div>
+
+        <div class="rgb-game-item">
+          <button class="rgb-game-btn" data-src="/roms/conways-life.gb" data-title="Conway's Life">
+            Conway's Life
+          </button>
+          <span class="rgb-game-credit">
+            <a href="https://novasquirrel.itch.io/conways-life-for-game-boy" target="_blank" rel="noopener">NovaSquirrel</a>
+            &nbsp;·&nbsp;GPL-3.0 + CC BY 4.0
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  const overlay   = document.getElementById('rgb-overlay');
+  const romInput  = document.getElementById('rgb-rom-input');
+  const loadLabel = document.getElementById('rgb-load-label');
+  const gameBtns  = document.querySelectorAll('.rgb-game-btn');
+
+  // Load the WASM module eagerly so it is ready when the user picks a ROM.
+  let _start      = null;
+  let _pendingRom = null;
+
+  (async () => {
+    try {
+      const { default: init, start } = await import('/emulator/rgb_web.js');
+      await init();
+      _start = start;
+      if (_pendingRom) {
+        launchEmulator(_pendingRom.bytes, _pendingRom.name);
+        _pendingRom = null;
+      }
+    } catch (e) {
+      console.error('[rgb] emulator module failed to load:', e);
+    }
+  })();
+
+  // ── User file picker ─────────────────────────────────────────────────
+  romInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    queueOrLaunch(bytes, file.name);
+  });
+
+  // ── Built-in game buttons ────────────────────────────────────────────
+  gameBtns.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const src   = btn.dataset.src;
+      const title = btn.dataset.title;
+
+      // Show a brief loading state on the button itself.
+      btn.textContent = '…';
+      btn.disabled = true;
+
+      try {
+        const res   = await fetch(src);
+        const bytes = new Uint8Array(await res.arrayBuffer());
+        queueOrLaunch(bytes, title);
+      } catch (e) {
+        console.error('[rgb] failed to fetch ROM:', src, e);
+        btn.textContent = title; // restore on failure
+        btn.disabled = false;
+      }
+    });
+  });
+
+  // ── Shared launch logic ──────────────────────────────────────────────
+  function queueOrLaunch(bytes, name) {
+    if (_start) {
+      launchEmulator(bytes, name);
+    } else {
+      // WASM still initialising — queue and launch once ready.
+      _pendingRom = { bytes, name };
+      loadLabel.textContent = 'Loading…';
+    }
+  }
+
+  function launchEmulator(bytes, name) {
+    // Hide the "load a ROM" placeholder.
+    overlay.style.display = 'none';
+
+    // Lock the Load ROM button and all game buttons — winit's event loop
+    // cannot be re-entered without a full page refresh.
+    loadLabel.textContent = name || 'loaded';
+    loadLabel.classList.add('loaded');
+    romInput.disabled = true;
+    gameBtns.forEach(b => {
+      b.disabled = true;
+      b.textContent = b.dataset.title; // restore text in case one showed '…'
+    });
+
+    _start(bytes);
+  }
+</script>
