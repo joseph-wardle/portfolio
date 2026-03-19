@@ -26,7 +26,7 @@
   }
   .rgb-screen canvas {
     display: block;
-    max-width: 100%;
+    width: 100%;
     height: auto;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
@@ -162,7 +162,7 @@
          winit attaches to this element by id="rgb-canvas".
          max-width:100% + height:auto in CSS makes it responsive. */}}
     <div class="rgb-screen">
-      <canvas id="rgb-canvas" width="640" height="576"></canvas>
+      <canvas id="rgb-canvas" width="160" height="144"></canvas>
       <div class="rgb-overlay" id="rgb-overlay">
         {{/* Simple Game Boy silhouette icon */}}
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
