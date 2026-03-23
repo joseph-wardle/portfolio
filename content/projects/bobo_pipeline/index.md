@@ -79,4 +79,4 @@ The fix was to replace point instancers with automatically generated mesh proxie
   caption="The same environment with proxy assets — 30 fps."
 >}}
 
-{{< github repo="joseph-wardle/bobo-pipeline" showThumbnail=false >}}
+{{< github repo="DallinClark/bobo-pipeline" showThumbnail=false >}}
