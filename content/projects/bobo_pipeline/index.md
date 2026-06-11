@@ -1,9 +1,10 @@
 ---
 title: "Honey Business Pipeline"
 date: 2025-11-07
-summary: "USD-based pipeline contributions for the BYU animated short Honey Business — unified Maya publishing, multi-environment support, and automated viewport proxies."
+summary: "Pipeline work on BYU's Honey Business — cross DCC USD publishing, multi-environment support, and auto-generated proxies (70× viewport speedup)."
 tags: ["USD", "TD", "Pipeline", "ShotGrid", "Maya", "Houdini", "Nuke", "Substance"]
-weight: 10
+weight: 15
+track: pipeline
 ---
 
 This project is a custom DCC-agnostic production pipeline I helped build for the short film *Honey Business* by the BYU Center for Animation. It builds upon [Scott Milner's](https://www.linkedin.com/in/sdmilner/) work from [*Student Accomplice*](https://youtu.be/mM5pBgfEhP4?si=76aHx6uTfAjYnhK5) and *Love and Gold* — go read Scott's [pipeline overview](https://scottdmilner.github.io/code-projects/dungeon-pipeline/) for a deep dive into the core systems design. The fantastic [Dallin Clark](https://www.linkedin.com/in/dallin-clark1/) maintained the pipeline solo from October 2024 until I joined in late 2025. You can read about his contributions on his [portfolio](https://dallinclark.com/).
@@ -79,4 +80,4 @@ The fix was to replace point instancers with automatically generated mesh proxie
   caption="The same environment with proxy assets — 30 fps."
 >}}
 
-{{< github repo="joseph-wardle/bobo-pipeline" showThumbnail=false >}}
+{{< github repo="DallinClark/bobo-pipeline" showThumbnail=false >}}

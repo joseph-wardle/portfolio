@@ -1,0 +1,49 @@
+{{/*
+  Two-track projects index. Overrides the theme list template to group
+  project pages by the `track` front matter param ("pipeline" or
+  "graphics"), ordered by weight within each track. Pages without a
+  track land in an unlabeled section at the bottom so nothing is
+  silently dropped — give every new project a track.
+*/}}
+{{ define "main" }}
+  {{ .Scratch.Set "scope" "list" }}
+
+  <header>
+    <h1 class="mt-5 text-4xl font-extrabold text-neutral-900 dark:text-neutral">{{ .Title }}</h1>
+  </header>
+
+  <section class="mt-0 prose flex max-w-full flex-col dark:prose-invert">
+    <div class="min-w-0 min-h-0 max-w-prose">
+      {{ .Content }}
+    </div>
+  </section>
+
+  {{ $pages := .Pages }}
+  {{ $tracks := slice
+    (dict "key" "pipeline" "title" "Production Pipeline")
+    (dict "key" "graphics" "title" "Graphics &amp; Systems")
+  }}
+
+  {{ range $track := $tracks }}
+    {{ $trackPages := where $pages "Params.track" $track.key }}
+    {{ with $trackPages }}
+      <h2 class="mt-12 mb-3 text-2xl font-bold text-neutral-700 first:mt-8 dark:text-neutral-300">
+        {{ $track.title | safeHTML }}
+      </h2>
+      <section class="w-full grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+        {{ range .ByWeight }}
+          {{ partial "article-link/card.html" . }}
+        {{ end }}
+      </section>
+    {{ end }}
+  {{ end }}
+
+  {{ $untracked := where $pages "Params.track" "==" nil }}
+  {{ with $untracked }}
+    <section class="mt-12 w-full grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+      {{ range .ByWeight }}
+        {{ partial "article-link/card.html" . }}
+      {{ end }}
+    </section>
+  {{ end }}
+{{ end }}

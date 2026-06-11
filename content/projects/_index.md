@@ -1,11 +1,9 @@
 ---
 title: "Projects"
-description: "Selected graphics programming and TD work — real-time rendering, image synthesis, and tools."
+description: "Production pipeline and graphics programming work — USD pipelines, cross-DCC artist tools, rendering, and systems projects."
 menu:
     main:
         weight: 20
 ---
 
-Welcome! Here are a few of the graphics projects I’ve worked on recently.  
-Click a project card to see details, demos, benchmarks, and whatever else I felt like talking about.
-
+Welcome! Here's my production pipeline work and graphics programming, with breakdowns of the problems, the design decisions, and the results. Click a card for details, demos, and benchmarks.

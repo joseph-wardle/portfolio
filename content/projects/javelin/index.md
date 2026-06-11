@@ -1,9 +1,10 @@
 ---
 title: "Javelin Physics Engine"
 date: 2026-03-10
-summary: "A real-time rigid body simulator in C++23 — dual-BVH broad phase, persistent manifolds, warm-started PGS contacts, sleep/wake islands, and XPBD distance constraints."
+summary: "Rigid-body physics engine in C++23 modules — warm-started PGS solver, dual-BVH broad phase, and deterministic capture."
 tags: ["C++23", "Physics", "Simulation", "OpenGL", "Rendering", "Tracy"]
 weight: 20
+track: graphics
 ---
 
 Javelin is a real-time rigid body physics engine written from scratch in **C++23**, using named modules throughout. It handles spheres and oriented boxes, resolves contacts with a warm-started projected Gauss-Seidel solver, supports XPBD-style distance constraints, and tracks sleep/wake islands to keep large stacks stable. The broad phase uses a dual-BVH design with deterministic parallel dispatch, a custom OpenGL renderer handles scene output and debug overlays, and scenes are authored in a plain-text format (`.jvscene`) that stays readable without any tooling.

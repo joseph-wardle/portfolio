@@ -1,9 +1,10 @@
 ---
 title: "Game Boy Emulator"
 date: 2026-03-15
-summary: "A cycle-accurate DMG emulator written in Rust — with a WebAssembly build you can play right here in the browser."
+summary: "Cycle-accurate Game Boy emulator in Rust — playable right here in the browser via WebAssembly."
 tags: ["Rust", "WebAssembly", "Emulation", "wgpu"]
 weight: 25
+track: graphics
 ---
 
 **rgb** is a cycle-accurate DMG emulator written in **Rust**. Pick a `.gb` ROM below to try it out.

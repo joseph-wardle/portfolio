@@ -4,6 +4,7 @@ date: 2025-08-15
 summary: "A real-time ray tracer built in Vulkan and C++23, with area lights, LTC soft shadows, physically based materials, and a custom denoising pipeline."
 tags: ["Rendering", "Ray Tracing", "Vulkan", "C++"]
 weight: 30
+track: graphics
 ---
 
 {{< carousel images="gallery/*" interval="3000" >}}
