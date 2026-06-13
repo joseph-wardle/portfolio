@@ -10,17 +10,34 @@
 # overridden by providing a weight value. The menu will then be
 # ordered by weight from lowest to highest.
 
-# "Projects" is added to the main menu via front matter in content/projects/_index.md (weight 20).
+[[main]]
+  name = "pipeline"
+  url = "/#pipeline"
+  weight = 10
 
 [[main]]
-  name = "About"
+  name = "graphics"
+  url = "/#graphics"
+  weight = 20
+
+[[main]]
+  name = "about"
   pageRef = "about"
   weight = 30
 
 [[main]]
+  name = "github"
+  url = "https://github.com/joseph-wardle"
+  weight = 40
+
+# style = "button" renders this entry as a filled button — see the
+# site overrides of header-option-simple.html / header-mobile-option-simple.html.
+[[main]]
   name = "Resume"
   url = "/resume.pdf"
-  weight = 40
+  weight = 50
+  [main.params]
+    style = "button"
 
 #[[main]]
 #  name = "Blog"

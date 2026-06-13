@@ -1,0 +1,50 @@
+{{/*
+  Custom homepage: name-led hero + two anchored track sections.
+  Selected via [homepage] layout = "custom" in params.toml.
+  Section headings/grids reuse the theme's compiled utility classes —
+  don't invent new Tailwind classes here, they won't exist in the CSS.
+*/}}
+<section class="jw-hero">
+  <div>
+    <h1>Joseph Wardle</h1>
+    <p class="jw-role">Pipeline TD &mdash; BYU Center for Animation</p>
+    <p class="jw-lede">
+      Howdy! I'm the sole TD for a 50+ artist crew on
+      <strong>Sandwich Kwon Do</strong>, and worked extensively on
+      <strong>Honey Business</strong>. Python, Qt, USD, and ShotGrid by day;
+      path tracing, physics engines, and emulators in C++ and Rust by night.
+    </p>
+    <p class="jw-lede">
+      Seeking TD internships &amp; early-career roles &mdash; graduating April 2027.
+    </p>
+    <div class="jw-ctas">
+      <a class="jw-btn jw-btn-primary" href="/resume.pdf" target="_blank" rel="noopener">&darr;&nbsp;Resume (PDF)</a>
+      <a class="jw-btn jw-btn-ghost" href="mailto:joseph.m.wardle@gmail.com">&#9993;&nbsp;joseph.m.wardle@gmail.com</a>
+    </div>
+  </div>
+  {{ with resources.Get "img/profile.jpg" }}
+    {{ $photo := .Fill "640x640 q92" }}
+    <div class="jw-hero-photo">
+      <img src="{{ $photo.RelPermalink }}" width="320" height="320" alt="Joseph Wardle" class="nozoom">
+    </div>
+  {{ end }}
+</section>
+
+{{ $tracks := slice
+  (dict "key" "pipeline" "title" "Production Pipeline")
+  (dict "key" "graphics" "title" "Graphics &amp; Systems")
+}}
+
+{{ range $track := $tracks }}
+  {{ $trackPages := where site.RegularPages "Params.track" $track.key }}
+  {{ with $trackPages }}
+    <h2 id="{{ $track.key }}" class="mt-12 mb-3 text-2xl font-bold text-neutral-700 first:mt-8 dark:text-neutral-300">
+      {{ $track.title | safeHTML }}
+    </h2>
+    <section class="w-full grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+      {{ range .ByWeight }}
+        {{ partial "article-link/card.html" . }}
+      {{ end }}
+    </section>
+  {{ end }}
+{{ end }}

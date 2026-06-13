@@ -1,0 +1,41 @@
+{{/*
+  Site override: mobile counterpart of header-option-simple.html —
+  style = "button" menu entries (Resume) render as a filled button.
+*/}}
+{{ if eq .Params.style "button" }}
+  <li class="mt-3">
+    <a
+      href="{{ .URL }}"
+      target="_blank"
+      rel="noopener"
+      class="jw-btn-resume"
+      {{ with .Name }}aria-label="{{ . }}"{{ end }}
+      title="{{ .Title }}">
+      {{ .Name | markdownify }}
+    </a>
+  </li>
+{{ else }}
+  <li class="mt-1">
+    <a
+      href="{{ .URL }}"
+      {{ if or (strings.HasPrefix .URL "http:" ) (strings.HasPrefix .URL "https:"
+        )
+      }}
+        target="_blank"
+      {{ end }}
+      class="flex items-center hover:text-primary-600 dark:hover:text-primary-400"
+      {{ with or .Name .Pre }}aria-label="{{ . }}"{{ end }}
+      title="{{ .Title }}">
+      {{ if .Pre }}
+        <div {{ if and .Pre .Name }}class="mr-2"{{ end }}>
+          {{ partial "icon.html" .Pre }}
+        </div>
+      {{ end }}
+      {{ if .Name }}
+        <p class="text-bg font-bg">
+          {{ .Name | markdownify }}
+        </p>
+      {{ end }}
+    </a>
+  </li>
+{{ end }}

@@ -1,0 +1,220 @@
+/*
+ * Site-wide style tuning + homepage hero components.
+ * Loaded by Blowfish's head.html when present. The theme ships
+ * precompiled Tailwind, so anything new lives under jw-* classes here.
+ */
+
+:root {
+    --jw-sans: system-ui, "Segoe UI", Roboto, "Noto Sans", "Liberation Sans", sans-serif;
+    --jw-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+html,
+body {
+    font-family: var(--jw-sans);
+}
+
+/* Article/prose body text: slightly larger and looser than the
+   Tailwind prose default for long-form readability. */
+.prose {
+    font-size: 1.0625rem;
+    line-height: 1.7;
+}
+
+/* Anchored track sections shouldn't hide under the header on jump. */
+h2[id] {
+    scroll-margin-top: 1.5rem;
+}
+
+/* ---------- header: jw. monogram ---------- */
+
+.jw-logo {
+    font-family: var(--jw-mono);
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.jw-logo-dot {
+    color: rgb(var(--color-primary-600));
+}
+
+.dark .jw-logo-dot {
+    color: rgb(var(--color-primary-400));
+}
+
+/* ---------- header: filled Resume button ---------- */
+
+.jw-btn-resume {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    background-color: rgb(var(--color-primary-600));
+    color: rgb(var(--color-neutral-50));
+}
+
+.jw-btn-resume:hover {
+    background-color: rgb(var(--color-primary-700));
+}
+
+.dark .jw-btn-resume {
+    background-color: rgb(var(--color-primary-400));
+    color: rgb(var(--color-neutral-900));
+}
+
+.dark .jw-btn-resume:hover {
+    background-color: rgb(var(--color-primary-300));
+}
+
+/* ---------- homepage hero ---------- */
+
+.jw-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2.5rem;
+    align-items: center;
+    /* Cap the hero to a reading-width block so the photo sits beside the
+       text instead of being flung to the far edge of the wide page. */
+    max-width: 56rem;
+    padding: 3rem 0 1rem;
+}
+
+@media (max-width: 767px) {
+    .jw-hero {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: none;
+        padding-top: 2rem;
+    }
+
+    /* On mobile, stack the photo above the text rather than hiding it. */
+    .jw-hero-photo {
+        order: -1;
+        justify-self: start;
+        margin-bottom: 1rem;
+    }
+
+    .jw-hero-photo img {
+        width: 10rem;
+        height: 10rem;
+    }
+}
+
+.jw-hero h1 {
+    font-size: clamp(2.5rem, 6vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin: 0;
+    color: rgb(var(--color-neutral-800));
+}
+
+.dark .jw-hero h1 {
+    color: rgb(var(--color-neutral-100));
+}
+
+.jw-role {
+    margin-top: 0.625rem;
+    font-size: 1.0625rem;
+    color: rgb(var(--color-neutral-600));
+}
+
+.dark .jw-role {
+    color: rgb(var(--color-neutral-300));
+}
+
+.jw-lede {
+    margin-top: 1.25rem;
+    max-width: 60ch;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: rgb(var(--color-neutral-600));
+}
+
+.dark .jw-lede {
+    color: rgb(var(--color-neutral-400));
+}
+
+.jw-lede strong {
+    font-weight: 600;
+    color: rgb(var(--color-neutral-800));
+}
+
+.dark .jw-lede strong {
+    color: rgb(var(--color-neutral-200));
+}
+
+.jw-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+}
+
+.jw-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.375rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.jw-btn-primary {
+    background-color: rgb(var(--color-primary-600));
+    border: 1px solid rgb(var(--color-primary-600));
+    color: rgb(var(--color-neutral-50));
+}
+
+.jw-btn-primary:hover {
+    background-color: rgb(var(--color-primary-700));
+    border-color: rgb(var(--color-primary-700));
+}
+
+.dark .jw-btn-primary {
+    background-color: rgb(var(--color-primary-400));
+    border-color: rgb(var(--color-primary-400));
+    color: rgb(var(--color-neutral-900));
+}
+
+.dark .jw-btn-primary:hover {
+    background-color: rgb(var(--color-primary-300));
+    border-color: rgb(var(--color-primary-300));
+}
+
+.jw-btn-ghost {
+    border: 1px solid rgb(var(--color-neutral-300));
+    color: rgb(var(--color-neutral-700));
+}
+
+.jw-btn-ghost:hover {
+    border-color: rgb(var(--color-neutral-500));
+    color: rgb(var(--color-neutral-800));
+}
+
+.dark .jw-btn-ghost {
+    border-color: rgb(var(--color-neutral-700));
+    color: rgb(var(--color-neutral-200));
+}
+
+.dark .jw-btn-ghost:hover {
+    border-color: rgb(var(--color-neutral-500));
+    color: rgb(var(--color-neutral-100));
+}
+
+.jw-hero-photo img {
+    width: 20rem;
+    height: 20rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgb(var(--color-neutral-300));
+}
+
+.dark .jw-hero-photo img {
+    border-color: rgb(var(--color-neutral-700));
+}

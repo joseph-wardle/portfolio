@@ -14,17 +14,17 @@
     --color-neutral-800: 60, 56, 54; /* dark1  #3c3836 */
     --color-neutral-900: 29, 32, 33; /* dark0_hard #1d2021 */
 
-    /* Primary: Gruvbox Blue (teal-ish) */
-    --color-primary-50: 232, 244, 243;
-    --color-primary-100: 210, 230, 228;
-    --color-primary-200: 180, 210, 208;
-    --color-primary-300: 151, 189, 187;
-    --color-primary-400: 131, 165, 152; /* bright blue #83a598 */
-    --color-primary-500: 100, 149, 144;
-    --color-primary-600: 69, 133, 136; /* blue #458588 */
-    --color-primary-700: 56, 113, 116;
-    --color-primary-800: 46, 93, 96;
-    --color-primary-900: 36, 73, 75;
+    /* Primary: Gruvbox Yellow */
+    --color-primary-50: 253, 244, 214;
+    --color-primary-100: 251, 235, 178;
+    --color-primary-200: 250, 222, 132;
+    --color-primary-300: 250, 205, 88;
+    --color-primary-400: 250, 189, 47; /* bright yellow #fabd2f */
+    --color-primary-500: 215, 153, 33; /* yellow #d79921 */
+    --color-primary-600: 181, 118, 20; /* dark yellow #b57614 */
+    --color-primary-700: 150, 98, 17;
+    --color-primary-800: 118, 77, 14;
+    --color-primary-900: 87, 57, 10;
 
     /* Secondary: Gruvbox Aqua (green-cyan) */
     --color-secondary-50: 236, 247, 233;
