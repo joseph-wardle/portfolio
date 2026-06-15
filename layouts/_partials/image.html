@@ -1,0 +1,43 @@
+{{- /* image.html — responsive <img> with webp srcset + intrinsic width/height (ADR-005).
+   Shared by the card partial, the figure shortcode, and the image render hook.
+   ctx (dict):
+     res    (resource, required)
+     alt    (string)            default ""
+     class  (string)            applied to <img>
+     sizes  (string)            default "100vw"
+     widths (slice of ints)     default 480/768/1200/1600
+     eager  (bool)              true → LCP: fetchpriority=high, not lazy; false → lazy+async */ -}}
+{{- $r := .res -}}
+{{- if $r -}}
+  {{- $alt := .alt | default "" -}}
+  {{- $sizes := .sizes | default "100vw" -}}
+  {{- $class := .class -}}
+  {{- $eager := .eager | default false -}}
+  {{- $ladder := .widths | default (slice 480 768 1200 1600) -}}
+  {{- $sub := $r.MediaType.SubType -}}
+  {{- $load := cond $eager (printf "fetchpriority=%q" "high") (printf "loading=%q" "lazy") -}}
+  {{- if or (eq $sub "svg") (eq $sub "gif") -}}
+  <img src="{{ $r.RelPermalink }}" alt="{{ $alt }}"{{ with $class }} class="{{ . }}"{{ end }} {{ $load | safeHTMLAttr }} decoding="async">
+  {{- else -}}
+    {{- $srcset := slice -}}
+    {{- $largest := $r -}}
+    {{- range $w := $ladder -}}
+      {{- if le $w $r.Width -}}
+        {{- $img := $r.Resize (printf "%dx webp q80" $w) -}}
+        {{- $srcset = $srcset | append (printf "%s %dw" $img.RelPermalink $w) -}}
+        {{- $largest = $img -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if not $srcset -}}
+      {{- $img := $r.Resize (printf "%dx webp q80" $r.Width) -}}
+      {{- $srcset = slice (printf "%s %dw" $img.RelPermalink $r.Width) -}}
+      {{- $largest = $img -}}
+    {{- end -}}
+  <img
+    src="{{ $largest.RelPermalink }}"
+    srcset="{{ delimit $srcset ", " }}"
+    sizes="{{ $sizes }}"
+    width="{{ $largest.Width }}" height="{{ $largest.Height }}"
+    alt="{{ $alt }}"{{ with $class }} class="{{ . }}"{{ end }} {{ $load | safeHTMLAttr }} decoding="async">
+  {{- end -}}
+{{- end -}}

@@ -14,6 +14,12 @@ buildFuture = false
 
 enableEmoji = true
 
+# `track` is a front-matter param, not a taxonomy (ADR-002). `tags` stays as
+# front-matter data (used in OG article:tag) but generates no term pages, so
+# there are no taxonomy/term page kinds and home/page/section cover every kind.
+# Top-level scalar: must sit above the first [table] header or TOML nests it.
+disableKinds = ["taxonomy", "term"]
+
 # googleAnalytics = "G-XXXXXXXXX"
 
 [pagination]
@@ -22,46 +28,11 @@ enableEmoji = true
 [imaging]
   anchor = 'Center'
 
-[taxonomies]
-  tag = "tags"
-  category = "categories"
-  author = "authors"
-  series = "series"
-
 [sitemap]
   changefreq = 'daily'
   filename = 'sitemap.xml'
   priority = 0.5
 
 [outputs]
-  home = ["HTML", "RSS", "JSON"]
-
-[related]
-  threshold = 0
-  toLower = false
-
-    [[related.indices]]
-        name = "tags"
-        weight = 100
-
-    [[related.indices]]
-        name = "categories"
-        weight = 100
-
-    [[related.indices]]
-        name = "series"
-        weight = 50
-
-    [[related.indices]]
-        name = "authors"
-        weight = 20
-
-    [[related.indices]]
-        name = "date"
-        weight = 10
-
-    [[related.indices]]
-      applyFilter = false
-      name = 'fragmentrefs'
-      type = 'fragments'
-      weight = 10
+  # Search dropped (gate-1 decision) → no JSON index. RSS kept for feed parity.
+  home = ["HTML", "RSS"]

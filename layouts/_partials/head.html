@@ -1,0 +1,102 @@
+{{- /* head.html — metadata, SEO/OG/Twitter, JSON-LD, fonts, CSS, analytics.
+       Parity target captured in docs/baseline/head/*.html. */ -}}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+
+{{- $site := site -}}
+{{- $author := site.Params.author -}}
+{{- $isHome := .IsHome -}}
+{{- $title := cond $isHome $site.Title (printf "%s · %s" .Title $site.Title) -}}
+{{- $desc := or .Description .Summary $site.Params.description -}}
+{{- $desc = $desc | plainify | chomp -}}
+
+<title>{{ $title }}</title>
+<meta name="description" content="{{ $desc }}">
+<link rel="canonical" href="{{ .Permalink }}">
+<meta name="author" content="{{ $author.name }}">
+
+{{- /* social share image: page featured.* → site default → none */ -}}
+{{- $img := "" -}}
+{{- with .Resources.GetMatch "featured.*" }}{{ $img = .Permalink }}{{ end -}}
+{{- if not $img }}{{ with resources.Get $site.Params.defaultSocialImage }}{{ $img = .Permalink }}{{ end }}{{ end -}}
+
+{{- /* Open Graph */ -}}
+<meta property="og:site_name" content="{{ $site.Title }}">
+<meta property="og:title" content="{{ if $isHome }}{{ $site.Title }}{{ else }}{{ .Title }}{{ end }}">
+<meta property="og:description" content="{{ $desc }}">
+<meta property="og:url" content="{{ .Permalink }}">
+<meta property="og:locale" content="{{ or site.Language.LanguageCode "en" }}">
+<meta property="og:type" content="{{ if and (not $isHome) .Date }}article{{ else }}website{{ end }}">
+{{- if and (not $isHome) .Date }}
+<meta property="article:section" content="{{ .Section }}">
+<meta property="article:published_time" content="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">
+<meta property="article:modified_time" content="{{ (or .Lastmod .Date).Format "2006-01-02T15:04:05Z07:00" }}">
+{{- range .Params.tags }}
+<meta property="article:tag" content="{{ . }}">
+{{- end }}
+{{- end }}
+{{- with $img }}
+<meta property="og:image" content="{{ . }}">
+{{- end }}
+
+{{- /* Twitter */ -}}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ if $isHome }}{{ $site.Title }}{{ else }}{{ .Title }}{{ end }}">
+<meta name="twitter:description" content="{{ $desc }}">
+{{- with $img }}
+<meta name="twitter:image" content="{{ . }}">
+{{- end }}
+
+{{- /* favicons (vendored into static/) */ -}}
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="manifest" href="/site.webmanifest">
+
+{{- /* fonts: preload only the display weight used in the LCP heading */ -}}
+<link rel="preload" href="/fonts/bricolage-grotesque-800.woff2" as="font" type="font/woff2" crossorigin>
+
+{{- /* one fingerprinted, integrity-checked stylesheet (ADR-004) */ -}}
+{{- with resources.Get "css/slate.css" }}
+  {{- $css := . | minify | fingerprint "sha512" }}
+<link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
+{{- end }}
+
+{{- /* feeds */ -}}
+{{- range .AlternativeOutputFormats }}
+<link rel="{{ .Rel }}" type="{{ .MediaType.Type }}" href="{{ .Permalink }}" title="{{ $site.Title }}">
+{{- end }}
+
+{{- /* JSON-LD: Person on the homepage, Article on dated pages */ -}}
+{{- if $isHome }}
+<script type="application/ld+json">
+{{- dict
+  "@context" "https://schema.org"
+  "@type" "Person"
+  "name" $author.name
+  "url" $site.BaseURL
+  "jobTitle" $author.bio
+  "email" (replace (index (index $author.links 0) "email") "mailto:" "")
+  "sameAs" (slice "https://github.com/joseph-wardle" "https://www.linkedin.com/in/joseph-wardle-7b4b621b4/")
+  | jsonify }}
+</script>
+{{- else if .Date }}
+<script type="application/ld+json">
+{{- dict
+  "@context" "https://schema.org"
+  "@type" "Article"
+  "headline" .Title
+  "description" $desc
+  "datePublished" (.Date.Format "2006-01-02")
+  "dateModified" ((or .Lastmod .Date).Format "2006-01-02")
+  "author" (dict "@type" "Person" "name" $author.name)
+  "image" $img
+  "mainEntityOfPage" .Permalink
+  | jsonify }}
+</script>
+{{- end }}
+
+{{- /* Umami — privacy-friendly, self-hosted, deferred (kept per gate-1 decision) */ -}}
+<script defer src="https://stats.josephwardle.com/script.js" data-website-id="654ac0b1-7909-410a-a21e-c21d025a36d8"></script>

@@ -1,0 +1,17 @@
+{{- /* header.html — monogram + mono nav, driven by [menus] (config/_default/menus.en.toml).
+       Entries with [main.params] style="button" render as the filled Resume pill. */ -}}
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="nav__mark" href="{{ "/" | relURL }}" aria-label="{{ site.Title }}">jw<b>.</b></a>
+    <nav class="nav__links" aria-label="Primary">
+      {{- range site.Menus.main }}
+        {{- $external := hasPrefix .URL "http" }}
+        {{- if eq .Params.style "button" }}
+      <a class="nav__resume" href="{{ .URL }}" target="_blank" rel="noopener">{{ .Name }}</a>
+        {{- else }}
+      <a class="nav__hide-sm" href="{{ .URL }}"{{ if $external }} target="_blank" rel="noopener"{{ end }}>{{ .Name }}</a>
+        {{- end }}
+      {{- end }}
+    </nav>
+  </div>
+</header>
