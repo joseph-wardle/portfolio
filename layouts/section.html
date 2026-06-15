@@ -1,10 +1,1 @@
-{{ define "main" }}
-<div class="page wrap">
-  <header class="page__header">
-    <span class="page__eyebrow mono">Selected work</span>
-    <h1>{{ .Title }}</h1>
-    {{- with .Description }}<p class="page__lead">{{ . }}</p>{{ end }}
-  </header>
-  {{ partial "tracks.html" (dict "pages" .Pages "showUntracked" true) }}
-</div>
-{{ end }}
+{{ define "main" }}{{ partial "section-main.html" . }}{{ end }}

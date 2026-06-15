@@ -1,0 +1,27 @@
+{{- /* compare.html — before/after reveal slider (two page-bundle images).
+   Good for proxy-vs-final, noisy-vs-denoised, manual-vs-automated breakdowns.
+   The handle is a styled range input, so it's keyboard-operable; the JS only
+   maps its value to a CSS custom property (see assets/js/slate.js).
+   Usage: {{< compare before="noisy.png" after="denoised.png" labels="Noisy|Denoised" >}} */ -}}
+{{- $before := .Page.Resources.GetMatch (.Get "before") -}}
+{{- $after := .Page.Resources.GetMatch (.Get "after") -}}
+{{- $labels := split (.Get "labels" | default "Before|After") "|" -}}
+{{- $caption := .Get "caption" -}}
+{{- if and $before $after -}}
+  {{- $.Page.Store.Set "needsJS" true -}}
+  {{- $b := $before.Resize "1400x webp q82" -}}
+  {{- $a := $after.Resize "1400x webp q82" -}}
+  <figure class="s-compare" data-compare>
+    <div class="s-compare-pane" style="--pos:50%">
+      <img class="s-compare-after" src="{{ $a.RelPermalink }}" width="{{ $a.Width }}" height="{{ $a.Height }}" loading="lazy" decoding="async" alt="{{ index $labels 1 }}">
+      <img class="s-compare-before" src="{{ $b.RelPermalink }}" loading="lazy" decoding="async" alt="{{ index $labels 0 }}">
+      <span class="s-compare-tag left">{{ index $labels 0 }}</span>
+      <span class="s-compare-tag right">{{ index $labels 1 }}</span>
+      <input class="s-compare-range" type="range" min="0" max="100" value="50" aria-label="Reveal {{ index $labels 0 }} versus {{ index $labels 1 }}">
+      <span class="s-compare-handle" aria-hidden="true"></span>
+    </div>
+    {{- with $caption }}<figcaption>{{ . | markdownify }}</figcaption>{{ end }}
+  </figure>
+{{- else -}}
+  {{- warnf "compare: before/after resource missing in %s" $.Page.File.Path -}}
+{{- end -}}

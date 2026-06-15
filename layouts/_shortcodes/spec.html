@@ -1,0 +1,22 @@
+{{- /* spec.html — "at a glance" panel for case-study headers. Paired; the inner
+   body is one "Key: Value" per line.
+   Usage:
+     {{< spec >}}
+     Role: Sole pipeline TD
+     Team: 50+ artists
+     Stack: Python, USD, Houdini, ShotGrid
+     {{< /spec >}} */ -}}
+{{- $title := .Get "title" | default "At a glance" -}}
+<dl class="s-spec">
+  <p class="s-spec-eyebrow mono">{{ $title }}</p>
+  {{- range (split (trim .Inner "\n") "\n") -}}
+    {{- $line := trim . " " -}}
+    {{- if $line -}}
+      {{- $kv := split $line ": " -}}
+      <div class="s-spec-row">
+        <dt>{{ index $kv 0 }}</dt>
+        <dd>{{ delimit (after 1 $kv) ": " | markdownify }}</dd>
+      </div>
+    {{- end -}}
+  {{- end -}}
+</dl>

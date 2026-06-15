@@ -10,6 +10,14 @@
       {{ block "main" . }}{{ end }}
     </main>
     {{ partial "footer.html" . }}
+    {{- /* per-component JS, deferred + fingerprinted, only when an interactive
+           shortcode on this page asked for it (ADR-006) */ -}}
+    {{- if .Store.Get "needsJS" }}
+      {{- with resources.Get "js/slate.js" }}
+        {{- $js := . | minify | fingerprint "sha512" }}
+    <script src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}" defer></script>
+      {{- end }}
+    {{- end }}
     {{ block "scripts" . }}{{ end }}
   </body>
 </html>

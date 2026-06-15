@@ -1,0 +1,15 @@
+{{- /* render-image.html — markdown images (![alt](src)) get the same responsive
+   webp + intrinsic-dimension treatment as the figure shortcode (ADR-005) when
+   they point at a page-bundle resource. Remote/absolute URLs pass through as a
+   plain lazy <img>. */ -}}
+{{- $dest := .Destination -}}
+{{- $external := or (strings.HasPrefix $dest "http") (strings.HasPrefix $dest "//") -}}
+{{- $res := and (not $external) (.Page.Resources.GetMatch $dest) -}}
+{{- with $res -}}
+  {{- partial "image.html" (dict
+    "res" . "alt" $.PlainText
+    "sizes" "(max-width: 760px) 100vw, 760px"
+    "widths" (slice 480 768 1200)) }}
+{{- else -}}
+  <img src="{{ $dest | safeURL }}" alt="{{ .PlainText }}"{{ with .Title }} title="{{ . }}"{{ end }} loading="lazy" decoding="async">
+{{- end -}}

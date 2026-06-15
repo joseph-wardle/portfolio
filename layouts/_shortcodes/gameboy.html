@@ -1,171 +1,81 @@
 {{/*
   gameboy.html — embeds the rgb Game Boy emulator as an interactive element.
+  Styled to the slate system: hard edges, orange accent, mono labels, palette
+  tokens. The WASM module is its own concern (no shared slate.js needed).
 
   Prerequisites: build the WASM module and copy it to static/emulator/ first:
     cd rgb_web && ./build.sh
 */}}
 
 <style>
-  .rgb-embed {
-    margin: 2rem 0;
-    font-family: ui-monospace, "Cascadia Code", "Fira Mono", monospace;
-  }
-  .rgb-shell {
-    border-radius: 0.5rem;
-    overflow: hidden;
-    border: 1px solid #3c3836;
-    background: #1d2021;
-  }
+  .rgb-embed { margin: 2rem 0; font-family: var(--mono); }
+  .rgb-shell { overflow: hidden; border: 1px solid var(--line); background: var(--bg); }
 
   /* ── Screen ─────────────────────────────────────────────────────────── */
-  .rgb-screen {
-    background: #000;
-    display: flex;
-    justify-content: center;
-    position: relative;
-  }
+  .rgb-screen { background: #000; display: flex; justify-content: center; position: relative; }
   .rgb-screen canvas {
-    display: block;
-    width: 100%;
-    height: auto;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
+    display: block; width: 100%; height: auto;
+    image-rendering: pixelated; image-rendering: crisp-edges;
   }
   .rgb-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    color: #504945;
-    font-size: 0.8rem;
-    pointer-events: none;
-    user-select: none;
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: .6rem;
+    color: var(--line2); font-size: .72rem; letter-spacing: .14em;
+    text-transform: uppercase; pointer-events: none; user-select: none;
   }
-  .rgb-overlay svg { opacity: 0.25; }
+  .rgb-overlay svg { opacity: .25; }
 
   /* ── Primary toolbar (Load ROM + key hints) ─────────────────────────── */
   .rgb-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.6rem 1rem;
-    background: #282828;
-    border-top: 1px solid #3c3836;
+    display: flex; flex-wrap: wrap; align-items: center; gap: .75rem;
+    padding: .6rem 1rem; background: var(--panel); border-top: 1px solid var(--line);
   }
   .rgb-load-btn {
-    cursor: pointer;
-    display: inline-block;
-    padding: 0.3rem 0.9rem;
-    font-size: 0.82rem;
-    font-weight: 600;
-    border-radius: 0.3rem;
-    background: #d79921;
-    color: #1d2021;
-    transition: background 0.12s;
-    user-select: none;
-    white-space: nowrap;
+    cursor: pointer; display: inline-block; padding: .35rem .95rem;
+    font-size: .72rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase;
+    background: var(--orange); color: var(--bg); transition: background .12s;
+    user-select: none; white-space: nowrap;
   }
-  .rgb-load-btn:hover { background: #fabd2f; }
+  .rgb-load-btn:hover { background: var(--fg); }
   .rgb-load-btn.loaded {
-    background: #504945;
-    color: #928374;
-    cursor: default;
-    font-weight: 400;
+    background: var(--line2); color: var(--dim); cursor: default;
+    font-weight: 400; letter-spacing: .04em; text-transform: none;
   }
-  .rgb-hint {
-    font-size: 0.72rem;
-    color: #665c54;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+  .rgb-hint { font-size: .72rem; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rgb-hint kbd {
-    background: #3c3836;
-    border: 1px solid #504945;
-    border-radius: 0.2rem;
-    padding: 0.05rem 0.3rem;
-    font-family: inherit;
-    font-size: inherit;
-    color: #928374;
+    background: var(--line); border: 1px solid var(--line2); padding: .05rem .35rem;
+    font-family: inherit; font-size: inherit; color: var(--dim);
   }
 
   /* ── Open-source game picker ─────────────────────────────────────────── */
-  .rgb-games {
-    padding: 0.55rem 1rem 0.65rem;
-    background: #1d2021;
-    border-top: 1px solid #3c3836;
-  }
+  .rgb-games { padding: .55rem 1rem .7rem; background: var(--bg); border-top: 1px solid var(--line); }
   .rgb-games-label {
-    display: block;
-    font-size: 0.68rem;
-    color: #504945;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 0.5rem;
-    user-select: none;
+    display: block; font-size: .64rem; color: var(--faint); text-transform: uppercase;
+    letter-spacing: .14em; margin-bottom: .55rem; user-select: none;
   }
-  .rgb-games-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .rgb-game-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-  }
+  .rgb-games-list { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .rgb-game-item { display: flex; flex-direction: column; gap: .15rem; }
   .rgb-game-btn {
-    cursor: pointer;
-    background: transparent;
-    border: 1px solid #504945;
-    border-radius: 0.3rem;
-    padding: 0.25rem 0.7rem;
-    font-size: 0.8rem;
-    font-family: inherit;
-    color: #a89984;
-    transition: border-color 0.12s, color 0.12s;
-    white-space: nowrap;
+    cursor: pointer; background: transparent; border: 1px solid var(--line2);
+    padding: .28rem .75rem; font-size: .74rem; font-family: inherit; color: var(--dim);
+    transition: border-color .12s, color .12s; white-space: nowrap;
   }
-  .rgb-game-btn:hover {
-    border-color: #928374;
-    color: #ebdbb2;
-  }
-  .rgb-game-btn:disabled {
-    cursor: default;
-    border-color: #3c3836;
-    color: #504945;
-  }
-  .rgb-game-credit {
-    font-size: 0.65rem;
-    color: #504945;
-    padding-left: 0.1rem;
-    white-space: nowrap;
-  }
-  .rgb-game-credit a {
-    color: #665c54;
-    text-decoration: none;
-  }
-  .rgb-game-credit a:hover {
-    color: #928374;
-    text-decoration: underline;
-  }
+  .rgb-game-btn:hover { border-color: var(--orange); color: var(--fg); }
+  .rgb-game-btn:disabled { cursor: default; border-color: var(--line); color: var(--line2); }
+  .rgb-game-credit { font-size: .62rem; color: var(--faint); padding-left: .1rem; white-space: nowrap; }
+  .rgb-game-credit a { color: var(--faint); text-decoration: none; }
+  .rgb-game-credit a:hover { color: var(--dim); text-decoration: underline; }
 </style>
 
-<div class="rgb-embed not-prose">
+<div class="rgb-embed">
   <div class="rgb-shell">
 
-    {{/* Screen: pre-placed canvas at native 4× scale (640×576).
-         winit attaches to this element by id="rgb-canvas".
-         max-width:100% + height:auto in CSS makes it responsive. */}}
+    {{/* Screen: winit attaches to this canvas by id="rgb-canvas".
+         max-width:100% + height:auto makes it responsive. */}}
     <div class="rgb-screen">
       <canvas id="rgb-canvas" width="160" height="144"></canvas>
       <div class="rgb-overlay" id="rgb-overlay">
-        {{/* Simple Game Boy silhouette icon */}}
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect x="8" y="6" width="32" height="36" rx="5" fill="#ebdbb2"/>
           <rect x="12" y="10" width="24" height="16" rx="2" fill="#282828"/>
           <circle cx="34" cy="34" r="4" fill="#cc241d"/>
@@ -180,9 +90,7 @@
 
     {{/* Primary toolbar — Load ROM is the main action */}}
     <div class="rgb-toolbar">
-      <label class="rgb-load-btn" for="rgb-rom-input" id="rgb-load-label">
-        Load ROM
-      </label>
+      <label class="rgb-load-btn" for="rgb-rom-input" id="rgb-load-label">Load ROM</label>
       <input type="file" id="rgb-rom-input" accept=".gb,.bin" style="display:none;">
       <span class="rgb-hint">
         <kbd>↑↓←→</kbd> d-pad &nbsp;·&nbsp;

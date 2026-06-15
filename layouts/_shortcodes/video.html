@@ -1,0 +1,24 @@
+{{- /* video.html — self-hosted clip from the page bundle (tool/screen-capture demos).
+   Defaults to muted + looped + autoplay so embedded demos stay quiet and cheap;
+   override per use. src resolves as a page resource first, else as a path/URL.
+   Usage: {{< video src="unified_publish/publish_demo.mp4" caption="One-click publish." >}}
+          {{< video src="loop.mp4" poster="loop.jpg" autoplay="false" >}} */ -}}
+{{- $src := .Get "src" -}}
+{{- $res := .Page.Resources.GetMatch $src -}}
+{{- $caption := .Get "caption" -}}
+{{- $autoplay := ne (.Get "autoplay") "false" -}}
+{{- $loop := ne (.Get "loop") "false" -}}
+{{- $muted := or $autoplay (ne (.Get "muted") "false") -}}
+{{- $controls := ne (.Get "controls") "false" -}}
+{{- $srcURL := $src | relURL -}}
+{{- $mtype := "video/mp4" -}}
+{{- with $res }}{{ $srcURL = .RelPermalink }}{{ $mtype = .MediaType.Type }}{{ end -}}
+{{- $posterURL := "" -}}
+{{- with .Get "poster" }}{{ $posterURL = . | relURL }}{{ with $.Page.Resources.GetMatch . }}{{ $posterURL = .RelPermalink }}{{ end }}{{ end -}}
+<figure class="s-video">
+  <video {{ if $controls }}controls {{ end }}{{ if $autoplay }}autoplay {{ end }}{{ if $loop }}loop {{ end }}{{ if $muted }}muted {{ end }}playsinline preload="metadata"{{ with $posterURL }} poster="{{ . }}"{{ end }}>
+    <source src="{{ $srcURL }}" type="{{ $mtype }}">
+    Your browser can't play embedded video. <a href="{{ $srcURL }}">Download the clip</a>.
+  </video>
+  {{- with $caption }}<figcaption>{{ . | markdownify }}</figcaption>{{ end }}
+</figure>

@@ -1,0 +1,30 @@
+{{- /* carousel.html — CSS scroll-snap gallery from the page bundle.
+   Pulls images by glob, shows one at a time, full-frame (no crop — these are
+   render comparisons where the whole image matters). Buttons, dots, and optional
+   autoplay (data-interval ms) are wired in assets/js/slate.js.
+   Usage: {{< carousel images="gallery/*" interval="3000" >}} */ -}}
+{{- $glob := or (.Get "images") (.Get 0) -}}
+{{- $interval := .Get "interval" | default "0" -}}
+{{- $caption := .Get "caption" -}}
+{{- with .Page.Resources.Match $glob -}}
+  {{- $.Page.Store.Set "needsJS" true -}}
+  <figure class="s-carousel" data-carousel data-interval="{{ $interval }}">
+    <div class="s-carousel-track">
+      {{- range . -}}
+        {{- $im := cond (gt .Width 1200) (.Resize "1200x webp q80") (.Resize (printf "%dx webp q82" .Width)) -}}
+        <div class="s-slide">
+          <img src="{{ $im.RelPermalink }}" width="{{ $im.Width }}" height="{{ $im.Height }}"
+               loading="lazy" decoding="async" alt="">
+        </div>
+      {{- end -}}
+    </div>
+    <button class="s-carousel-nav prev" type="button" data-dir="-1" aria-label="Previous image">&#8249;</button>
+    <button class="s-carousel-nav next" type="button" data-dir="1" aria-label="Next image">&#8250;</button>
+    <div class="s-carousel-dots" aria-hidden="true">
+      {{- range $i, $e := . -}}<span{{ if eq $i 0 }} class="on"{{ end }}></span>{{- end -}}
+    </div>
+    {{- with $caption }}<figcaption>{{ . | markdownify }}</figcaption>{{ end }}
+  </figure>
+{{- else -}}
+  {{- warnf "carousel: no images match %q in %s" $glob $.Page.File.Path -}}
+{{- end -}}

@@ -1,0 +1,17 @@
+{{- /* figure.html — captioned image from the page bundle (the workhorse, ~26 uses).
+   Delegates to the image partial for responsive webp + intrinsic dimensions
+   (ADR-005). In-content figures are below the fold, so they load lazily.
+   Usage: {{< figure src="broad_phase/bvh_debug.png" caption="BVH nodes." >}} */ -}}
+{{- $src := .Get "src" -}}
+{{- $alt := or (.Get "alt") (.Get "caption") "" -}}
+{{- with .Page.Resources.GetMatch $src -}}
+  <figure class="s-fig">
+    {{- partial "image.html" (dict
+      "res" . "alt" ($alt | plainify | chomp)
+      "sizes" "(max-width: 760px) 100vw, 940px"
+      "widths" (slice 480 768 940 1400)) }}
+    {{- with $.Get "caption" }}<figcaption>{{ . | markdownify }}</figcaption>{{ end }}
+  </figure>
+{{- else -}}
+  {{- warnf "figure: resource %q not found in %s" $src $.Page.File.Path -}}
+{{- end -}}

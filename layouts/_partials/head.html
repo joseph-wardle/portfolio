@@ -64,6 +64,14 @@
 <link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
 {{- end }}
 
+{{- /* Force content render so render hooks (math, interactive shortcodes) can
+       register their per-page asset needs before we emit conditional <link>s.
+       .Content is memoized, so the later {{ block "main" }} render is free. */ -}}
+{{- $_ := .Content -}}
+{{- if .Store.Get "hasMath" }}
+<link rel="stylesheet" href="/katex/katex.min.css">
+{{- end }}
+
 {{- /* feeds */ -}}
 {{- range .AlternativeOutputFormats }}
 <link rel="{{ .Rel }}" type="{{ .MediaType.Type }}" href="{{ .Permalink }}" title="{{ $site.Title }}">

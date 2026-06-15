@@ -36,3 +36,21 @@ disableKinds = ["taxonomy", "term"]
 [outputs]
   # Search dropped (gate-1 decision) → no JSON index. RSS kept for feed parity.
   home = ["HTML", "RSS"]
+
+# Own markup config so rendering survives Blowfish removal (increment 6).
+[markup]
+  [markup.goldmark.renderer]
+    unsafe = true # in-content raw HTML (shortcode output, embeds)
+  # Server-side math (ADR-006): transform.ToMath renders KaTeX at build time
+  # via _markup/render-passthrough.html — zero client JS. Delimiters match the
+  # content: inline \( \), block $$ $$ and \[ \].
+  [markup.goldmark.extensions.passthrough]
+    enable = true
+    [markup.goldmark.extensions.passthrough.delimiters]
+      block = [['\[', '\]'], ['$$', '$$']]
+      inline = [['\(', '\)']]
+  # Class-based syntax highlighting → one Chroma stylesheet in slate.css.
+  [markup.highlight]
+    noClasses = false
+    lineNos = false
+    tabWidth = 2
