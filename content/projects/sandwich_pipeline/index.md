@@ -9,7 +9,7 @@ track: pipeline
 
 `sandwich-pipeline` is the production backbone for *Sandwich Kwon Do*, BYU Center for Animation's 2027 capstone film. It supports five DCCs across Linux and Windows and serves more than fifty artists.
 
-I joined the project as its sole pipeline TD in late 2025 and have since written over 20,000 lines of production Python across the full stack: asset management, cross-DCC publishing, render telemetry, and per-DCC artist tooling. Every system described here is live in production today, and more are in active development.
+I joined the project as its sole pipeline TD in late 2025 and have since written many many lines of production Python across the full stack: asset management, cross-DCC publishing, render telemetry, and per-DCC artist tooling. Every system described here is currently in artists hands for a real production, and new workflows are being worked on all the time.
 
 > **At a glance**
 > - Sole TD on a 50+ artist animated feature film
@@ -24,11 +24,11 @@ I joined the project as its sole pipeline TD in late 2025 and have since written
 
 ### Unified Publish
 
-On previous BYU productions, modeling artists and shaders had to not only publish their work out of Maya or Substance Painter, but also open the asset in Houdini to generate the assembled USD asset used elsewhere in production. Turning asset publication into a two-step, cross-DCC process dramatically widened the footprint for things to go wrong, and made it difficult to track down where in the process an issue occurred.
+On previous BYU productions, asset publication was a mlti step process requiring artists to open multiple DCCs. Both modelers and shaders had to open Houdini, where the final USD assembly happens, every time they changed a model or a texture. Turning asset publication into a two-step, cross-DCC process dramatically widened the footprint for things to go wrong, and made it difficult to track down where in the process an issue occurred.
 
-I eliminated the seam by making the Maya publisher invoke Houdini as a subprocess. When an artist clicks Publish in Maya, the tool exports a source USD, then launches `hython` headlessly with a structured argument set pointing to the asset root. Houdini builds the full USD asset hierarchy (`geo.usd`, `mtl.usd`, `payload.usd`, and `asset.usd`), renders a viewport thumbnail, and writes a JSON result payload back to stdout. Maya parses the payload, handles errors, and reports the outcome. The whole process is one click.
+I eliminated the seam by making the Maya publisher invoke Houdini as a subprocess. When an artist clicks Publish in Maya, the tool exports a source USD, then launches `hython` headlessly with a structured argument set pointing to the asset root. Houdini builds the full USD asset hierarchy (`geo.usd`, `mtl.usd`, `payload.usd`, and `asset.usd`), renders a viewport thumbnail, and writes a JSON result payload back to stdout. Maya parses the payload, handles errors, and reports the outcome. The whole process is one click. 
 
-The same headless builder is called from Substance Painter when textures are exported, ensuring that material layers always land in the right location relative to the published geometry. The publish surface is consistent across all DCCs because it's always the same Houdini code doing the final assembly.
+The same headless builder is called from Substance Painter when textures are exported, ensuring that material layers always land in the right location relative to the published geometry. The publish surface is consistent across all DCCs because it's always the same Houdini code doing the final assembly. And this headless runner respects any changes artists made 
 
 Getting the system working was one thing, but once it worked, I could add a whole slew of fun features: telemetry emission on every step, automatic versioned backups, and a content signature system to avoid redundant backups.
 

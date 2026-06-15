@@ -1,6 +1,5 @@
 # -- Site Configuration --
 
-theme = "blowfish" # UNCOMMENT THIS LINE
 baseURL = "https://josephwardle.com/"
 defaultContentLanguage = "en"
 
@@ -37,7 +36,7 @@ disableKinds = ["taxonomy", "term"]
   # Search dropped (gate-1 decision) → no JSON index. RSS kept for feed parity.
   home = ["HTML", "RSS"]
 
-# Own markup config so rendering survives Blowfish removal (increment 6).
+# Markup config (self-contained — no theme).
 [markup]
   [markup.goldmark.renderer]
     unsafe = true # in-content raw HTML (shortcode output, embeds)

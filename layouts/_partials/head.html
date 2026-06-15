@@ -26,7 +26,7 @@
 <meta property="og:title" content="{{ if $isHome }}{{ $site.Title }}{{ else }}{{ .Title }}{{ end }}">
 <meta property="og:description" content="{{ $desc }}">
 <meta property="og:url" content="{{ .Permalink }}">
-<meta property="og:locale" content="{{ or site.Language.LanguageCode "en" }}">
+<meta property="og:locale" content="{{ or site.Language.Lang "en" }}">
 <meta property="og:type" content="{{ if and (not $isHome) .Date }}article{{ else }}website{{ end }}">
 {{- if and (not $isHome) .Date }}
 <meta property="article:section" content="{{ .Section }}">

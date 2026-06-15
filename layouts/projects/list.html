@@ -1,7 +1,0 @@
-{{- /* TRANSITIONAL SHIM (remove in increment 6, when Blowfish is gone).
-   During coexistence the theme's _default/list.html outranks the new-system
-   root section.html in Hugo's lookup, so this section-specific template is the
-   only reliable way to make /projects/ render in slate. Identical body to
-   section.html via the shared partial. Once themes/blowfish is excised, delete
-   this file and layouts/projects/ — root section.html takes over. */ -}}
-{{ define "main" }}{{ partial "section-main.html" . }}{{ end }}
