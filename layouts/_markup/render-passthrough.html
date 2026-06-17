@@ -1,0 +1,13 @@
+{{- /* render-passthrough.html — server-side math (ADR-006).
+   Goldmark passthrough hands us the raw TeX (delimiters stripped). We render
+   it to static KaTeX HTML at build time, so no client JS ships. The page flag
+   tells head.html to load the (self-hosted) KaTeX stylesheet on this page only. */ -}}
+{{- $opts := dict
+  "displayMode" (eq .Type "block")
+  "output" "htmlAndMathml"
+  "throwOnError" false
+  "errorColor" "#fb4934" -}}
+{{- with transform.ToMath .Inner $opts -}}
+  {{- $.Page.Store.Set "hasMath" true -}}
+  {{- . -}}
+{{- end -}}

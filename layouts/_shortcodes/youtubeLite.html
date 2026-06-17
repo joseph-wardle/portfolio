@@ -1,0 +1,19 @@
+{{- /* youtubeLite.html — privacy/perf-friendly YouTube facade.
+   Renders only a poster + play button; the iframe (youtube-nocookie) is swapped
+   in on click by assets/js/slate.js. No third-party JS until the user opts in.
+   Name + params kept for content compatibility.
+   Usage: {{< youtubeLite id="-KWMoVI1ow4" label="Realtime Raytracer demo" >}} */ -}}
+{{- $id := or (.Get "id") (.Get 0) -}}
+{{- $label := .Get "label" -}}
+{{- with $id -}}
+  {{- $.Page.Store.Set "needsJS" true -}}
+  <figure class="s-embed">
+    <button type="button" class="s-embed-frame" data-yt="{{ . }}"
+            aria-label="{{ with $label }}Play video: {{ . }}{{ else }}Play video{{ end }}">
+      <img class="s-embed-poster" src="https://i.ytimg.com/vi/{{ . }}/hqdefault.jpg"
+           width="480" height="360" loading="lazy" decoding="async" alt="">
+      <span class="s-play" aria-hidden="true"></span>
+    </button>
+    {{- with $label }}<figcaption>{{ . }}</figcaption>{{ end }}
+  </figure>
+{{- end -}}

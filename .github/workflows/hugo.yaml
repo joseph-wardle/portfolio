@@ -21,16 +21,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      DART_SASS_VERSION: 1.92.1
       GO_VERSION: 1.25.1
-      HUGO_VERSION: 0.148.2
+      HUGO_VERSION: 0.163.1
       NODE_VERSION: 22.18.0
       TZ: America/Denver
     steps:
       - name: Checkout portfolio
         uses: actions/checkout@v5
         with:
-          submodules: recursive
           fetch-depth: 0
 
       # ── Emulator WASM build ─────────────────────────────────────────────
@@ -85,14 +83,6 @@ jobs:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
-
-      # Optional: Dart Sass if your theme/site transpiles SCSS
-      - name: Install Dart Sass
-        run: |
-          curl -sLJO "https://github.com/sass/dart-sass/releases/download/${DART_SASS_VERSION}/dart-sass-${DART_SASS_VERSION}-linux-x64.tar.gz"
-          mkdir -p "${HOME}/.local"
-          tar -C "${HOME}/.local" -xf "dart-sass-${DART_SASS_VERSION}-linux-x64.tar.gz"
-          echo "${HOME}/.local/dart-sass" >> "${GITHUB_PATH}"
 
       - name: Install Hugo (extended)
         run: |

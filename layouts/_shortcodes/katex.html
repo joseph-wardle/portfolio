@@ -1,0 +1,6 @@
+{{- /* katex.html — compatibility no-op. Math now renders server-side via the
+   passthrough render hook (_markup/render-passthrough.html); this marker stays
+   so existing katex shortcode calls in content do not error. Emits nothing, but
+   flags the page so the KaTeX stylesheet loads even when the only math is a
+   construct the author plans to add later. */ -}}
+{{- .Page.Store.Set "hasMath" true -}}

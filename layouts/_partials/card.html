@@ -1,0 +1,17 @@
+{{- /* card.html — project card: 16:9 featured image, title, one-line summary.
+       ctx = a project Page. */ -}}
+<a class="card" href="{{ .RelPermalink }}">
+  <div class="card__im">
+    {{- with .Resources.GetMatch "featured.*" }}
+      {{- partial "image.html" (dict
+        "res" .
+        "alt" $.Title
+        "sizes" "(max-width: 760px) 100vw, 470px"
+        "widths" (slice 480 768 940)) }}
+    {{- end }}
+  </div>
+  <div class="card__tx">
+    <h3>{{ .Title }}</h3>
+    {{- with .Params.summary }}<p>{{ . }}</p>{{ end }}
+  </div>
+</a>

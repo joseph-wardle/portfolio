@@ -1,0 +1,4 @@
+{{- /* render-link.html — external links open in a new tab with safe rel; internal
+   links render plainly. Matches the prior site's behavior for parity. */ -}}
+{{- $external := or (strings.HasPrefix .Destination "http") (strings.HasPrefix .Destination "//") -}}
+<a href="{{ .Destination | safeURL }}"{{ with .Title }} title="{{ . }}"{{ end }}{{ if $external }} target="_blank" rel="noopener noreferrer"{{ end }}>{{ .Text }}</a>

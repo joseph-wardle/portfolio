@@ -1,0 +1,12 @@
+{{- /* callout.html — aside box. Paired; inner is markdown.
+   type: note (default) | warn | tip
+   Usage:
+     {{< callout type="tip" title="Why USD?" >}}
+     It's the one format every department already speaks.
+     {{< /callout >}} */ -}}
+{{- $type := .Get "type" | default "note" -}}
+{{- $title := .Get "title" -}}
+<aside class="s-callout {{ $type }}">
+  {{- with $title }}<p class="s-callout-title">{{ . }}</p>{{ end }}
+  <div class="s-callout-body">{{ .Inner | markdownify }}</div>
+</aside>

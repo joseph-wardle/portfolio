@@ -1,0 +1,7 @@
+{{- /* render-heading.html — headings keep their auto id (so deep-links / URL
+   fragments stay valid) and gain a subtle hover anchor. Plain markup, no
+   utility classes. */ -}}
+<h{{ .Level }} id="{{ .Anchor }}">
+  {{- .Text -}}
+  <a class="hanchor" href="#{{ .Anchor }}" aria-label="Permalink to this section">#</a>
+</h{{ .Level }}>

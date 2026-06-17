@@ -1,0 +1,31 @@
+{{- /* tracks.html — render projects grouped into the two tracks as card grids.
+       ctx (dict): pages (page collection), showUntracked (bool).
+       `track` is a front-matter param, not a taxonomy (ADR-002). */ -}}
+{{- $pages := .pages -}}
+{{- $defs := slice
+  (dict "key" "pipeline" "title" "Production Pipeline" "note" "what fifty artists run every day")
+  (dict "key" "graphics" "title" "Graphics &amp; Systems" "note" "built from scratch, for myself") -}}
+{{- range $defs }}
+  {{- $def := . -}}
+  {{- with where $pages "Params.track" $def.key }}
+  <section class="section{{ if eq $def.key "graphics" }} section--alt{{ end }}" id="{{ $def.key }}">
+    <div class="section__head">
+      <h2>{{ $def.title | safeHTML }}</h2>
+      <span class="section__note mono"><b>//</b> {{ $def.note }}</span>
+    </div>
+    <div class="cards">
+      {{- range .ByWeight }}{{ partial "card.html" . }}{{ end }}
+    </div>
+  </section>
+  {{- end }}
+{{- end }}
+{{- if .showUntracked }}
+  {{- with where $pages "Params.track" "==" nil }}
+  <section class="section" id="other">
+    <div class="section__head"><h2>Other</h2></div>
+    <div class="cards">
+      {{- range .ByWeight }}{{ partial "card.html" . }}{{ end }}
+    </div>
+  </section>
+  {{- end }}
+{{- end }}

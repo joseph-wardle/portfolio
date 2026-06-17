@@ -1,6 +1,6 @@
 disabled = false
-languageCode = "en"
-languageName = "English"
+locale = "en"   # renamed from languageCode (Hugo 0.158+); drives <html lang> and RSS <language>
+label = "English"   # renamed from languageName (Hugo 0.158+)
 weight = 1
 title = "Joseph Wardle — Pipeline TD"
 

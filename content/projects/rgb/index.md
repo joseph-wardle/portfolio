@@ -1,7 +1,7 @@
 ---
 title: "Game Boy Emulator"
 date: 2026-03-15
-summary: "Cycle-accurate Game Boy emulator in Rust — playable right here in the browser via WebAssembly."
+summary: "Cycle-accurate Game Boy emulator in Rust, playable right here in the browser via WebAssembly."
 tags: ["Rust", "WebAssembly", "Emulation", "wgpu"]
 weight: 25
 track: graphics
@@ -30,7 +30,7 @@ The DMG is built around four subsystems:
 
 The obvious approach to emulation is to run a complete CPU instruction, then catch up the PPU and APU to match. It works for most games. But some games write to PPU registers mid-scanline, change the scroll position between lines, or read hardware registers at a cycle-specific moment, and they depend on that window being exact.
 
-rgb steps the CPU **one M-cycle at a time** (four T-cycles, the smallest schedulable unit), advancing the PPU and APU in lockstep with every micro-operation. Memory accesses happen at the exact cycle they would on real hardware. The bus interleaving is accurate enough to pass Blargg's `cpu_instrs` and `instr_timing` test ROMs and to handle games that rely on mid-scanline effects.
+`rgb` steps the CPU **one M-cycle at a time** (four T-cycles, the smallest schedulable unit), advancing the PPU and APU in lockstep with every micro-operation. Memory accesses happen at the exact cycle they would on real hardware. The bus interleaving is accurate enough to pass Blargg's `cpu_instrs` and `instr_timing` test ROMs and to handle games that rely on mid-scanline effects.
 
 ---
 
