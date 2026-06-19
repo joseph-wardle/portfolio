@@ -4,7 +4,7 @@
 {{- $pages := .pages -}}
 {{- $defs := slice
   (dict "key" "pipeline" "title" "Production Pipeline" "note" "what fifty artists run every day")
-  (dict "key" "graphics" "title" "Graphics &amp; Systems" "note" "built from scratch, for myself") -}}
+  (dict "key" "graphics" "title" "Graphics &amp; Systems" "note" "built from scratch") -}}
 {{- range $defs }}
   {{- $def := . -}}
   {{- with where $pages "Params.track" $def.key }}
