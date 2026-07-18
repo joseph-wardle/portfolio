@@ -23,13 +23,13 @@
     {{- $largest := $r -}}
     {{- range $w := $ladder -}}
       {{- if le $w $r.Width -}}
-        {{- $img := $r.Resize (printf "%dx webp q80" $w) -}}
+        {{- $img := $r.Resize (printf "%dx webp q90" $w) -}}
         {{- $srcset = $srcset | append (printf "%s %dw" $img.RelPermalink $w) -}}
         {{- $largest = $img -}}
       {{- end -}}
     {{- end -}}
     {{- if not $srcset -}}
-      {{- $img := $r.Resize (printf "%dx webp q80" $r.Width) -}}
+      {{- $img := $r.Resize (printf "%dx webp q90" $r.Width) -}}
       {{- $srcset = slice (printf "%s %dw" $img.RelPermalink $r.Width) -}}
       {{- $largest = $img -}}
     {{- end -}}

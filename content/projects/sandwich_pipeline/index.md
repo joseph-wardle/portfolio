@@ -7,9 +7,9 @@ weight: 10
 track: pipeline
 ---
 
-`sandwich-pipeline` is the production backbone for *Sandwich Kwon Do*, BYU Center for Animation's 2027 capstone film. It supports five DCCs across Linux and Windows and serves more than fifty artists.
+`sandwich-pipeline` is the USD production backbone for *Sandwich Kwon Do*, BYU Center for Animation's 2027 capstone film. It supports five DCCs across Linux and Windows and serves more than fifty artists.
 
-I joined the project as its sole pipeline TD in late 2025 and have since written many many lines of production Python across the full stack: asset management, cross-DCC publishing, render telemetry, and per-DCC artist tooling. Every system described here is currently in artists hands for a real production, and new workflows are being worked on all the time.
+I joined the project as its sole pipeline TD in late 2025 and have since written many many lines of production Python across the full stack. Every system described here is currently in artists hands for a real production, and new workflows are being worked on all the time.
 
 > **At a glance**
 > - Sole TD on a 50+ artist animated feature film
@@ -67,20 +67,50 @@ Further publication can be customized in the SKD component output node, which su
 
 ### Playblast Pipeline
 
-Before I rewrote it, the playblast workflow produced files that lived on a local drive and had to be manually uploaded to ShotGrid. This was error-prone and a significant time sink for our frequent dailies review schedule.
+Maya and Houdini already have good playblastinig tools. But managing HUD burnin, export destination, and uploading for review is tedius, error-prone, and a significant time sink for our frequent dailies review schedule.
 
-The new playblast tool is a full Qt UI that handles encoding, naming, and delivery. Artists select a shot, choose a department (animation, layout, lighting), configure HUD elements, and hit record. The tool uses FFmpeg to encode the playblast with DNxHD SQ or DNxHD HQX presets for editorial handoff, or H.264 for web review. It derives a version name from the shot and timestamp, creates a ShotGrid Version record linked to the shot, and uploads the movie. Artists and team leads see it in ShotGrid immediately. The tool emits telemetry on completion and failure, so broken playblasts are visible in the dashboard.
+Our playblast tool is a full Qt UI suite that handles encoding, naming, and delivery. The tool uses FFmpeg to encode the playblast with DNxHD SQ or DNxHD HQX presets for editorial handoff, or H.264 for web review. It handles department relevant HUD burnin. It derives a version name from the shot and timestamp, creates a ShotGrid Version record linked to the shot, and uploads the movie. Artists and team leads see it in ShotGrid immediately. A custom preview toolset was built to let artists preview the playblast before saving it anywhere.
 
-A version of the tool is available in Maya for previs artists and animators, and a matching version lives in Houdini for FX, layout, and lighting artists. All tools share the same backend code for encoding and ShotGrid delivery.
+A version of the tool is available in Maya for previs artists, animators, modelers wanting turnarounds, etc., and a matching version lives in Houdini for FX, layout, and lighting artists. All tools share the same backend code for encoding and ShotGrid delivery.
 
 {{< figure
-  src="playblast/previs_playblast.png"
-  caption="The playblast UI in Maya for previs artists."
+  src="playblast/anim_playblast.png"
+  caption="The turnaround playblast UI in Maya for modelers."
 >}}
 
+{{< video
+  src="playblast/playblast_previewer.mp4"
+  caption="The built-in previewer, letting artists scrub a playblast before committing it to ShotGrid."
+>}}
+
+
+---
+
+## Previs Workflows
+
+Previs is a tricky beast to build tools for. The reason previs exists is because its expensive to codify the bridge between storyboards and animation. But at the same time, so much of previs is repeatable, tedious motions. Juggling iterative playblasts alone is exactly the time of file browser tedium artists shouldn't have to slog through. So I build a small bundle of tooling covering things I wanted, with the top priiority of getting out of the way of previs artists. This took many iterations.
+
+First, file management. Easy wins here. A small menu that owns file locations for the sake of sole later tooling, but is easier to use than a file browser. Heres a demo on some test data:
+
 {{< figure
-  src="playblast/fx_playblast.png"
-  caption="The playblast UI in Maya for FX artists."
+  src="previs/open_file.png"
+  caption="Open a previs file, with tidbits to help filter through the chaff."
+>}}
+
+This is where the fun begins.
+
+Previs outliners are a soup bowl of any and all information. Keeping track of cameras, shots lengths, alternates, etc. shouldn't be hard. But Maya's sequencer is too generic to be much use here. So I made my own. It works like a full editor suite, but without the bells and whistles. Our production does assemble previs edits outside of maya, so we dont need a full toolset. What we *do* need is a way to quickly see what shots exist in the file, their length, any alternates, and iterate without hastle. No stock maya toolset exists, so I had to implement some deep custom Qt wizardry to create an interface that was intuitive, unobtrusive, and beautiful.
+
+{{< figure
+  src="previs/sequencer_overview.png"
+  caption="Manage shots in one, clean, flexible interface"
+>}}
+
+This panel is very much supported by a suite of additional buttons. These buttons do many small tasks. One sets a viewport as a locked preview, showing at all times a view through the current camera for the current shot in the timeline. It can also playblast each shot seperately, and help the artist confirm each one seperately or as a single bundle. These playblast files are automatically sent to the editing team, with a changelist of what has been updated and which shots have new durations. When previs is ready to hand it off to RLO, it can automatically break the scene at each shot boundary into its own maya file, and export each camera as USD data that any DCC can consume.
+
+{{< figure
+  src="previs/sequencer_buttons.png"
+  caption="Previs utilities"
 >}}
 
 ---

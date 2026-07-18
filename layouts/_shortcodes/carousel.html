@@ -11,7 +11,7 @@
   <figure class="s-carousel" data-carousel data-interval="{{ $interval }}">
     <div class="s-carousel-track">
       {{- range . -}}
-        {{- $im := cond (gt .Width 1200) (.Resize "1200x webp q80") (.Resize (printf "%dx webp q82" .Width)) -}}
+        {{- $im := cond (gt .Width 1200) (.Resize "1200x webp q90") (.Resize (printf "%dx webp q90" .Width)) -}}
         <div class="s-slide">
           <img src="{{ $im.RelPermalink }}" width="{{ $im.Width }}" height="{{ $im.Height }}"
                loading="lazy" decoding="async" alt="">
