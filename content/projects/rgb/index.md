@@ -1,68 +1,36 @@
 ---
 title: "Game Boy Emulator"
 date: 2026-03-15
-summary: "Cycle-accurate Game Boy emulator in Rust, playable right here in the browser via WebAssembly."
+summary: "A Game Boy emulator in Rust that steps the hardware one machine cycle at a time. You can play it right here in your browser."
 tags: ["Rust", "WebAssembly", "Emulation", "wgpu"]
 weight: 25
 track: graphics
 ---
 
-**rgb** is a cycle-accurate DMG emulator written in **Rust**. Pick a `.gb` ROM below to try it out.
+**rgb** is a Game Boy (DMG) emulator written in Rust. I wanted to understand how a whole computer fits together, and the Game Boy is small enough to hold in your head. Pick a `.gb` ROM below and try it.
 
 {{< gameboy >}}
 
 {{< github repo="joseph-wardle/rgb" showThumbnail=false >}}
 
----
+### What's inside a Game Boy
 
-## How the hardware works
+There are four main pieces. The **CPU** is a Sharp SM83, a cousin of the Z80, running at about 4.19 MHz. The **PPU** draws the 160×144 screen one line at a time, mixing a background, a window, and up to ten sprites per line. The **APU** makes sound from two square waves, a wavetable, and a noise channel. And the **memory bus** connects all of it: every read and write goes through it, whether it's hitting the cartridge, video memory, or a hardware register.
 
-The DMG is built around four subsystems:
+### Getting the timing right
 
-- **CPU** — a Sharp LR35902, related to the Z80 family, clocked at 4,194,304 Hz. It fetches, decodes, and executes instructions using an internal register set (A, B, C, D, E, H, L, F, SP, PC) and a set of condition flags.
-- **PPU** — the pixel processing unit. It renders the 160×144 screen one scanline at a time over 70,224 T-cycles per frame (~59.7 Hz), mixing a background layer, a window layer, and up to ten sprites per line, all controlled by memory-mapped registers.
-- **APU** — four audio channels: two square-wave pulse generators with configurable duty cycle and envelope, a wavetable channel, and a linear feedback shift register for noise. All four mix to stereo output.
-- **Memory bus** — the arbiter that connects everything. Every memory read and write passes through it, including cartridge ROM and RAM, the PPU's tile and attribute tables, OAM (sprite data), and all hardware registers.
+The easy way to write an emulator is to run a whole CPU instruction, then let the PPU and APU catch up. That works for most games. But a lot of hardware behavior depends on exactly when a read or write lands, and catching up after the fact gets it wrong.
 
----
+So rgb steps everything one machine cycle (four clock ticks) at a time. Every memory access inside an instruction ticks the rest of the hardware forward before the next one happens, so reads and writes land on the same cycle they would on a real Game Boy.
 
-## The accuracy challenge
+To check it, I run the community's hardware test ROMs as part of the test suite. It passes all of Blargg's `cpu_instrs`, `instr_timing`, and `mem_timing` tests, and 49 of the 65 Mooneye acceptance tests. Most of the rest need the PPU timed below the level of a whole scanline, which I haven't built yet, so games that change the scroll in the middle of a line won't look right. That's the next thing on the list.
 
-The obvious approach to emulation is to run a complete CPU instruction, then catch up the PPU and APU to match. It works for most games. But some games write to PPU registers mid-scanline, change the scroll position between lines, or read hardware registers at a cycle-specific moment, and they depend on that window being exact.
+### Three crates
 
-`rgb` steps the CPU **one M-cycle at a time** (four T-cycles, the smallest schedulable unit), advancing the PPU and APU in lockstep with every micro-operation. Memory accesses happen at the exact cycle they would on real hardware. The bus interleaving is accurate enough to pass Blargg's `cpu_instrs` and `instr_timing` test ROMs and to handle games that rely on mid-scanline effects.
+- **`rgb_core`** is the emulator and nothing else: CPU, PPU, APU, bus, and cartridge mappers (MBC1, MBC3, MBC5). No windows, audio, or files, so it's easy to test on its own.
+- **`rgb_frontend`** handles the window, input, palette, and frame pacing, and draws the screen through wgpu. Native and web share the same loop.
+- **`rgb_web`** is a thin WebAssembly wrapper that connects the frontend to the browser.
 
----
+### Running in the browser
 
-## Architecture
-
-The codebase is split into three crates with a strict dependency hierarchy:
-
-**`rgb_core`** is the pure emulator. It contains the CPU, PPU, APU, memory bus, and cartridge mapper implementations (ROM-only, MBC1, MBC3, MBC5). It has no platform dependencies whatsoever — no windowing, no audio, no filesystem. Everything goes in, everything comes out through a clean API.
-
-**`rgb_frontend`** is the rendering and windowing layer shared across platforms. It uses **winit** for the window and event loop, and the **pixels** crate (wgpu-backed) for GPU-accelerated display. Frame pacing, input mapping, palette conversion, and an `AudioSink` trait that platform crates implement all live here. Native and web builds share the same loop structure; only a handful of `#[cfg(target_arch = "wasm32")]` guards handle the differences.
-
-**`rgb_web`** is a thin `cdylib` that wires `rgb_frontend` to the browser via **wasm-bindgen**. It implements `AudioSink` using the Web Audio API's `ScriptProcessorNode`, and provides the single exported `start(rom: &[u8])` function that JavaScript calls after the user picks a ROM file.
-
-This separation means `rgb_core` is trivially testable in isolation and has no exposure to platform quirks. The frontend knows nothing about cartridge formats; the core knows nothing about canvases.
-
----
-
-## Rendering pipeline
-
-The PPU writes shade indices (values 0–3, one per pixel, for the four DMG grey levels) into a 160×144 framebuffer as it processes each scanline. After `step_frame()` completes, the frontend converts these to RGBA using a configurable four-colour palette and writes them into a wgpu texture via the pixels crate, which handles GPU-accelerated scaling and letterboxing to the window size. The classic green LCD palette is the default.
-
-On native, a `FramePacer` sleeps the thread for whatever remains of the 16.743 ms frame budget after each frame. On the web, `requestAnimationFrame` fires at the monitor's refresh rate — potentially 60, 120, or 144 Hz — so the pacer instead checks elapsed time using `js_sys::Date::now()` and skips emulation when a full frame period hasn't passed yet, keeping the emulator at the correct speed regardless of display Hz.
-
----
-
-## WebAssembly
-
-The web build compiles to a WASM module via `wasm-pack`. Most of the work was in handling the constraints that don't exist on native:
-
-- **No `std::time::Instant`** — the browser sandbox doesn't expose a monotonic clock. The frame pacer switches to `js_sys::Date::now()` for wall-clock timing.
-- **No synchronous GPU init** — `Pixels::new()` blocks on native but is unavailable on WASM. The GPU surface is created with `Pixels::new_async()`, awaited inside a `spawn_local` microtask that fires from winit's `resumed()` callback.
-- **AudioContext autoplay policy** — browsers block audio until a user gesture. The Web Audio context is opened inside the file-picker's `change` event, which satisfies the gesture requirement.
-- **Canvas placement** — rather than letting winit append a new canvas to `document.body`, the shortcode pre-places a `<canvas id="rgb-canvas">` at the right spot in the article, and winit attaches to it by ID.
-
-The result is the same Rust emulator code running in the browser at native speed, with no plugins required.
+Most of the web work was dealing with things the browser doesn't let you do. There's no `std::time::Instant`, so frame pacing uses the browser's clock instead. GPU setup can't block, so it's created asynchronously once the window is ready. Browsers won't play audio until the user does something, so audio starts when you pick a ROM. And since a 144 Hz monitor would otherwise run the game more than twice as fast, the emulator skips frames until a real Game Boy frame's worth of time has passed.

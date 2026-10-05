@@ -1,263 +1,51 @@
 ---
 title: "Film Grain Synthesis"
 date: 2025-06-18
-summary: "Physically motivated film grain synthesis in Rust — up to 160× faster than the C reference, with CPU multithreading and GPU compute shader backends."
-tags: ["WGPU", "Rust"]
+summary: "Physically based film grain in Rust, on CPU and GPU. Multithreaded, it's a median 72× faster than the reference C implementation."
+tags: ["Rust", "WGPU", "Rendering"]
 weight: 50
 track: graphics
 ---
 
 {{< katex >}}
 
-Film grain isn't just noise — real photographic grain comes from randomly placed silver halide crystals, each with a physical size and position. [Newson et al. (2017)](https://www.ipol.im/pub/art/2017/192/) model this statistically and derive two efficient rendering algorithms from it. This project is a full reimplementation of that model in Rust, with CPU multithreading via **Rayon** and GPU execution via **WGPU compute shaders**.
-
-Both the grain-wise and pixel-wise variants from the paper are implemented. The right one is selected automatically based on your parameters and target device.
-
-Across ~7.6k parameter configurations and ~56k total renders, the Rust implementation outperforms the original C reference nearly everywhere: up to **160×** faster on CPU for grain-wise rendering, and **68×** faster on GPU for large pixel-wise jobs.
-
-Here are some renders in both black and white and color, run on various [Unsplash](https://unsplash.com) images:
+Real film grain isn't random noise laid over a picture. It comes from tiny silver crystals scattered through the film, each with its own size and position. [Newson et al. (2017)](https://www.ipol.im/pub/art/2017/192/) model this statistically and give two ways to render it. I reimplemented both in Rust, multithreaded on the CPU with Rayon and as compute shaders on the GPU with wgpu, then benchmarked the whole thing against the paper's C code.
 
 {{< carousel images="gallery/*" interval="3000" >}}
 
 {{< github repo="joseph-wardle/film_grain" showThumbnail=false >}}
 
----
+### Two ways to draw grain
 
-## Algorithm Design
+The **grain-wise** algorithm goes through the image, scatters grains, and stamps each one onto the pixels it covers. Its cost depends on how many grains there are. The **pixel-wise** algorithm goes through every output pixel and asks whether any grain could reach it. Its cost depends on how many pixels and samples there are.
 
-The renderer follows Newson et al.'s pipeline:
+In my grain-wise version, each output pixel keeps a bitset with one bit per Monte Carlo sample. Stamping a grain sets bits, and at the end the pixel's value is just the number of set bits divided by the sample count \(N\). The GPU version does the same thing in two passes, one to stamp grains and one to count bits.
 
-1. Load each color plane, normalize to \([0,1]\), and convert to an activity field \(\lambda(x, y)\).
-2. From user parameters, derive:
-   * Mean radius \(\mu_r\), standard deviation \(\sigma_r\), log-normal parameters when needed.
-   * A maximum radius \(r_m\) (absolute or quantile-based).
-   * A cell size \(\delta\) for the pixel-wise algorithm.
-   * Precomputed Gaussian filter constants and Poisson offsets in output and input space.
-3. Share these derived quantities across all backends so that CPU, GPU, grain-wise, and pixel-wise all see the same statistical model.
+Both algorithms share the same random number layout, so the CPU and GPU produce statistically matching grain from the same seed. Set the mode to `auto` and the tool picks an algorithm from the grain size, its variance, and the sample count.
 
-Sampling is reproducible: a splitmix64-style hash takes `(global_seed, stream_id, i, j)` to seed per-cell or per-pixel RNGs, with separate streams for grain centers and cell sampling. Given the same CLI parameters, CPU and GPU produce statistically consistent noise.
+### Benchmarking it
 
-### Algorithms
+I wanted to know which algorithm and which device actually win, and where, so a Python harness swept resolution, sample count, grain size, size variance, zoom, and image content. That's about 7,200 configurations and around 56,000 renders across the C reference and three Rust backends, using the median of three runs each.
 
-* **Grain-wise CPU**
+Here's the speedup over the C reference, per configuration:
 
-  For each input pixel with \(\lambda_{ij} > 0\), a Poisson number of grains is drawn; each grain's footprint in the output is splatted into a bitset:
+| Rust backend / algorithm | Median vs C | Middle half |
+|---|--:|--:|
+| CPU, multithreaded / grain | 72.5× | 42.6–160× |
+| CPU, multithreaded / pixel | 5.8× | 5.0–7.2× |
+| GPU / grain | 21.1× | 7.5–40.3× |
+| GPU / pixel | 7.2× | 1.4–31.8× |
+| CPU, single thread / grain | 21× | 5.9–55.7× |
+| CPU, single thread / pixel | 0.55× | 0.46–0.68× |
 
-  * Each output pixel has `lanes = ceil(N / 64)` atomic `u64`s.
-  * If a grain covers a pixel in sample `k`, the bit `k % 64` is set in lane `k / 64`.
-  * After all splats, bit counts per pixel are divided by `N`.
+That last row is honest: my single-threaded pixel-wise code is about half the speed of the C version.
 
-  Work scales with "number of active grains × footprint", not with total output pixels.
+### What I learned from the numbers
 
-* **Pixel-wise CPU**
+**On the CPU, grain-wise is the default now.** In the C reference, pixel-wise wins about two thirds of the time, which matches the paper. In Rust, grain-wise wins about 90% of the time. The bitset and Rayon move the crossover point about two orders of magnitude toward smaller jobs.
 
-  Work is split by output rows. For each pixel, for each precomputed offset in input space, the code:
+**The GPU is a scaling tool, not an automatic win.** Every GPU job pays a fixed cost for dispatch and transfers, so on small jobs it loses to the multithreaded CPU. It only pulls ahead past roughly \(10^5\) to \(10^6\) total samples. For the largest pixel-wise jobs, it's about 7–8× faster than the multithreaded CPU. For grain-wise, it almost never beats it.
 
-  * Finds grid cells whose grains could reach the pixel (using `r_m` and `δ`).
-  * For each cell, samples a Poisson number of grains and tests whether any lie within distance `r` of the current pixel, exiting early on the first hit.
+**Algorithm choice barely matters on the GPU.** Both kernels end up limited by memory bandwidth and move about the same amount of data, so their times land close together across the whole grid.
 
-  Cost is closer to "total_samples = pixels × \(N\)", matching the analysis in the original paper.
-
-* **GPU (wgpu)**
-
-  Both algorithms are implemented as WGSL compute shaders:
-
-  * Pixel-wise is a single pass over output pixels (`16×16` workgroups).
-  * Grain-wise is a two-pass pipeline: one shader splats grains into a lane-packed bitset, the second reduces bitsets to coverage probabilities.
-
-  Buffers are zeroed on the host, kernels are dispatched, and results are read back through a staging buffer.
-
-### Automatic Selection
-
-At the CLI layer, users can force `grain` or `pixel`, or choose `auto`. The selector uses simple thresholds on:
-
-* `sigma_ratio = σ_r / μ_r`
-* `rm_ratio = r_m / μ_r`
-* sample count `N`
-
-to steer small, low-variance grains to pixel-wise and large or high-variance cases to grain-wise. The benchmark results below validate those thresholds.
-
-### Benchmark Grid
-
-A Python harness sweeps:
-
-* Resolutions: \(128^2\), \(256^2\), \(512^2\), \(1024^2\)
-* Samples: \(N \in {1,2,4,8,16}\)
-* Mean radii: \(\mu_r \in {0.05, 0.1, 0.2, 0.5, 1.0, 2.0}\) pixels
-* Variance ratios: \(\sigma_r / \mu_r \in {0, 0.25, 0.5, 0.75, 1.0}\)
-* Zoom: \(s \in {1,2,4,8}\)
-* Intensity patterns: constant, step, ramp, and natural
-
-Each unique combination is a base configuration. For each base config, every supported `(algorithm, backend)` pair is rendered three times; the median runtime is used. Single-threaded runs cap Rayon at one worker, GPU runs are serialized.
-
-In total this produces about **7,200 base configurations** and **~56,000 individual runs** across:
-
-* C reference
-* Rust CPU (single-threaded)
-* Rust CPU (multi-threaded)
-* Rust GPU
-
----
-
-## Benchmark Results
-
-For each rendered `(impl, algo, config)` the analysis tooling:
-
-* Builds a unique `config_id` from algorithm, resolution, zoom, grain stats, and intensity pattern.
-* Derives:
-
-  * `pixels = width × height`
-  * `total_samples = pixels × N`
-  * `sec_per_pixel = runtime / pixels`
-  * `sec_per_sample = runtime / total_samples`
-* Tags size/radius/variance regimes so that scaling trends can be compared.
-
-After cleaning, there are roughly **12k** per-config medians for the C reference and **15k** per Rust variant — enough density for meaningful scatterplots and regime maps.
-
-A high-level summary:
-
-| Impl / Algo             | Configs | Median runtime | Median sec / pixel | Median sec / sample |
-| ----------------------- | ------- | -------------- | ------------------ | ------------------- |
-| C (grain)               | 6 000   | 8.17 s         | 31.8 µs            | 8.0 ns              |
-| C (pixel)               | 6 000   | 1.96 s         | 15.4 µs            | 3.8 ns              |
-| Rust CPU single (grain) | 7 074   | 0.16 s         | 1.3 µs             | 0.41 ns             |
-| Rust CPU multi (grain)  | 7 600   | 0.046 s        | 0.43 µs            | 0.10 ns             |
-| Rust GPU (grain)        | 7 560   | 0.25 s         | 3.3 µs             | 0.66 ns             |
-| Rust CPU single (pixel) | 7 071   | 3.45 s         | 31.1 µs            | 8.6 ns              |
-| Rust CPU multi (pixel)  | 7 599   | 0.37 s         | 2.9 µs             | 0.76 ns             |
-| Rust GPU (pixel)        | 7 560   | 0.26 s         | 3.3 µs             | 0.66 ns             |
-
-On log-scale boxplots, the C runs sit 1–2 orders of magnitude slower than Rust CPU for grain-wise rendering. Pixel-wise is more nuanced: multi-threaded CPU and GPU are clear wins, while Rust single-threaded shows a large, slow tail.
-
----
-
-## Rust vs. C Reference
-
-Three scatter plots compare C runtime (x-axis) to Rust runtime (y-axis) for the same configuration, colored by `log10(total_samples)`:
-
-* **Rust CPU single** points cluster near the diagonal for small grain-wise jobs, then fall below it as jobs get larger. For pixel-wise, many points sit above the diagonal: this implementation is often slower than C for that algorithm.
-* **Rust CPU multi** sits far below the diagonal almost everywhere. C jobs that take hundreds of seconds drop into the sub-second range.
-* **Rust GPU** forms a horizontal band from ~0.2–1 s across three orders of magnitude in C runtime, highlighting a substantial fixed overhead for kernel dispatch and buffer transfers.
-
-Aggregating per-config speedups:
-
-| Impl / Algo             | Median speedup vs C | IQR (q25–q75) |    Min–Max |
-| ----------------------- | ------------------: | ------------: | ---------: |
-| Rust CPU single / grain |                 21× |     5.9–55.7× |  0.15–386× |
-| Rust CPU single / pixel |               0.55× |    0.46–0.68× | 0.34–1.63× |
-| Rust CPU multi / grain  |               72.5× |     42.6–160× |   2.1–814× |
-| Rust CPU multi / pixel  |                5.8× |      5.0–7.2× |   0.52–16× |
-| Rust GPU / grain        |               21.1× |     7.5–40.3× |   1.9–387× |
-| Rust GPU / pixel        |                7.2× |     1.4–31.8× |  0.01–810× |
-
-The message is clear:
-
-* Rust **dramatically outperforms** the C reference for grain-wise rendering on both CPU and GPU.
-* For pixel-wise, multi-threaded CPU and GPU are clear wins, but single-threaded Rust is slower than C and is best treated as a baseline rather than a target.
-
-Scaling plots (runtime vs `total_samples` on log–log axes) show:
-
-* CPU curves have slopes near 1 for pixel-wise (O(total_samples)) and sub-linear for grain-wise, since grain-wise loops over active grains rather than all pixels.
-* GPU curves are almost flat until `total_samples` is large enough to amortize launch/transfer costs; once saturated, they grow slowly with additional work.
-
----
-
-## Grain-Wise vs. Pixel-Wise
-
-For each implementation, I compare algorithms by the per-config ratio
-
-$$
-\text{ratio} = \frac{T_\text{grain}}{T_\text{pixel}}
-$$
-
-Values >1 mean pixel-wise is faster; <1 means grain-wise is faster.
-
-Across all configs:
-
-* **C reference**: pixel-wise wins in ~66% of cases.
-* **Rust CPU (single + multi)**: grain-wise wins in ~89–90% of cases.
-* **Rust GPU**: neither dominates; grain-wise wins in ~66%, but ratios cluster close to 1.
-
-When mapped over \((\mu_r, \sigma_r / \mu_r)\) space:
-
-* The **C map** reproduces the regime from Newson et al.: pixel-wise dominates for small, low-variance grains, and grain-wise becomes preferable only when radii or variance are large.
-* The **Rust CPU maps** push the grain-friendly region dramatically downward: with the bitset design and Rayon, grain-wise is already superior around \(\mu_r≈0.1\) with modest variance, and can be 20× faster or more in high-variance regimes.
-* The **GPU map** hovers near unity across the grid: both GPU kernels are bandwidth-heavy and end up moving similar amounts of data, so algorithm choice matters less.
-
-Plotting the crossover against `total_samples`:
-
-* C switches from pixel- to grain-dominant around \(10^{6.7}–10^{7}\) samples.
-* Rust CPU multi crosses near \(10^{4.5}–10^{4.8}\) samples — about two orders of magnitude earlier.
-* GPU crosses roughly at \(10^{4.8}–10^{5}\) samples.
-
-On modern hardware, grain-wise is the **right default** on CPU, and pixel-wise becomes a niche tool for small, low-variance cases or GPU-heavy workloads.
-
----
-
-## CPU vs. GPU
-
-To compare backends within Rust:
-
-* `speedup_multi_vs_single = T_single / T_multi`
-* `speedup_gpu_vs_single = T_single / T_gpu`
-* `speedup_gpu_vs_multi = T_multi / T_gpu`
-
-Group medians by size regime:
-
-### Grain-wise
-
-| Size regime | Multi vs single | GPU vs single | GPU vs multi |
-| ----------: | --------------: | ------------: | -----------: |
-|       Small |            2.8× |         0.22× |        0.06× |
-|      Medium |            4.6× |         0.86× |        0.22× |
-|       Large |            4.4× |          1.7× |        0.51× |
-
-* Multi-threading buys a solid **3–5×** across the board.
-* GPU is almost always slower than CPU multi, and only modestly faster than single-threaded for the largest jobs.
-* CPU multi is the fastest grain-wise backend for ~90% of all configs.
-
-### Pixel-wise
-
-| Size regime | Multi vs single | GPU vs single | GPU vs multi |
-| ----------: | --------------: | ------------: | -----------: |
-|       Small |           11.3× |          4.0× |        0.37× |
-|      Medium |           12.0× |         18.7× |        1.71× |
-|       Large |           12.6× |         67.9× |         7.8× |
-
-* Multi-threading scales almost ideally (11–13×) over the single-threaded version.
-* GPU is slower than CPU multi for the smallest pixel-wise jobs, but quickly takes over:
-
-  * Wins ~30% of small configs, ~63% of medium, and ~87% of large.
-  * For the biggest jobs, GPU is typically **7–8×** faster than multi-threaded CPU and nearly **70×** faster than single-thread.
-
-GPU only becomes clearly worthwhile once `total_samples` exceeds roughly \(10^{5}–10^{6}\). Below that, a well-tuned CPU kernel wins.
-
----
-
-## Takeaways
-
-**For performance:**
-
-* Rust's CPU implementation turns the reference C code into a **baseline**, not a competitor:
-
-  * 40–160× faster for grain-wise rendering on typical workloads.
-  * 5–7× faster for pixel-wise on multi-threaded CPU and GPU.
-* On CPU, **grain-wise rendering is the workhorse**:
-
-  * Faster than pixel-wise in ~90% of configurations.
-  * Extends the grain-dominant regime roughly two orders of magnitude toward smaller images compared to the original implementation.
-* GPU is a **scaling tool**, not a universal win:
-
-  * Great for very large pixel-wise jobs (up to 68× vs single-threaded CPU).
-  * Rarely beats a well-parallelized CPU for grain-wise rendering.
-
-**For design decisions:**
-
-* The bitset-based grain-wise kernel and Rayon parallelism are the main drivers of CPU speedups.
-* The wgpu backend shares the same statistical model and RNG layout, so differences come from hardware and memory traffic, not math changes.
-* A simple heuristic selector (`choose.rs`) — looking at `σ_r / μ_r`, `r_m / μ_r`, and `N` — is enough to make good algorithm and device choices in practice:
-
-  * Default: **grain-wise + multi-threaded CPU**.
-  * Switch to **pixel-wise + GPU** for very large, high-quality renders.
-
-This project shows how to take a physically motivated model from the literature, reexpress it in modern Rust, and use systematic benchmarking to drive both algorithm and device choices around what actually performs well on current hardware.
+So the tool's default is grain-wise on the multithreaded CPU, and it switches to pixel-wise on the GPU for very large, high-quality renders.

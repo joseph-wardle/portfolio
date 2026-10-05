@@ -41,7 +41,14 @@
     background: var(--line2); color: var(--dim); cursor: default;
     font-weight: 400; letter-spacing: .04em; text-transform: none;
   }
-  .rgb-hint { font-size: .72rem; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rgb-hint { font-size: .72rem; color: var(--faint); line-height: 1.9; }
+  .rgb-hint span { white-space: nowrap; }
+  .rgb-touch-note { display: none; font-size: .72rem; color: var(--faint); }
+  /* no on-screen controls yet: on touch-only devices, say so instead of listing keys */
+  @media (hover: none) and (pointer: coarse) {
+    .rgb-hint { display: none; }
+    .rgb-touch-note { display: inline; }
+  }
   .rgb-hint kbd {
     background: var(--line); border: 1px solid var(--line2); padding: .05rem .35rem;
     font-family: inherit; font-size: inherit; color: var(--dim);
@@ -93,12 +100,13 @@
       <label class="rgb-load-btn" for="rgb-rom-input" id="rgb-load-label">Load ROM</label>
       <input type="file" id="rgb-rom-input" accept=".gb,.bin" style="display:none;">
       <span class="rgb-hint">
-        <kbd>↑↓←→</kbd> d-pad &nbsp;·&nbsp;
-        <kbd>Z</kbd> B &nbsp;·&nbsp;
-        <kbd>X</kbd> A &nbsp;·&nbsp;
-        <kbd>Enter</kbd> Start &nbsp;·&nbsp;
-        <kbd>⇧</kbd> Select
+        <span><kbd>↑↓←→</kbd> d-pad</span> &nbsp;·&nbsp;
+        <span><kbd>Z</kbd> B</span> &nbsp;·&nbsp;
+        <span><kbd>X</kbd> A</span> &nbsp;·&nbsp;
+        <span><kbd>Enter</kbd> Start</span> &nbsp;·&nbsp;
+        <span><kbd>⇧</kbd> Select</span>
       </span>
+      <span class="rgb-touch-note">Playing needs a keyboard for now.</span>
     </div>
 
     {{/* Game picker — secondary, visually muted */}}

@@ -14,9 +14,12 @@
 {{- $mtype := "video/mp4" -}}
 {{- with $res }}{{ $srcURL = .RelPermalink }}{{ $mtype = .MediaType.Type }}{{ end -}}
 {{- $posterURL := "" -}}
+{{- /* autoplay is deferred to slate.js: play while on screen, pause when not,
+       so an off-screen clip costs nothing on page load */ -}}
+{{- if $autoplay }}{{ $.Page.Store.Set "needsJS" true }}{{ end -}}
 {{- with .Get "poster" }}{{ $posterURL = . | relURL }}{{ with $.Page.Resources.GetMatch . }}{{ $posterURL = .RelPermalink }}{{ end }}{{ end -}}
 <figure class="s-video">
-  <video {{ if $controls }}controls {{ end }}{{ if $autoplay }}autoplay {{ end }}{{ if $loop }}loop {{ end }}{{ if $muted }}muted {{ end }}playsinline preload="metadata"{{ with $posterURL }} poster="{{ . }}"{{ end }}>
+  <video {{ if $controls }}controls {{ end }}{{ if $autoplay }}data-autoplay {{ end }}{{ if $loop }}loop {{ end }}{{ if $muted }}muted {{ end }}playsinline preload="{{ if $autoplay }}none{{ else }}metadata{{ end }}"{{ with $posterURL }} poster="{{ . }}"{{ end }}>
     <source src="{{ $srcURL }}" type="{{ $mtype }}">
     Your browser can't play embedded video. <a href="{{ $srcURL }}">Download the clip</a>.
   </video>

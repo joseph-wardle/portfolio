@@ -37,16 +37,17 @@
 
 /* ---------- design tokens ---------- */
 :root {
-  /* surfaces (gruvbox-dark "slate") */
-  --bg:    #1d2021;  /* page            */
-  --panel: #282828;  /* cards, insets   */
-  --line:  #3c3836;  /* hairline border */
-  --line2: #504945;  /* stronger border */
-  --inset: #0f1011;  /* near-black code */
+  /* surfaces (gruvbox dark, medium contrast: the neutral bg0 most editors and
+     TUIs ship, rather than the cooler, darker bg0_h) */
+  --bg:    #282828;  /* page   (bg0)    */
+  --panel: #32302f;  /* cards  (bg0_s)  */
+  --line:  #3c3836;  /* hairline (bg1)  */
+  --line2: #504945;  /* stronger (bg2)  */
+  --inset: #32302f;  /* code wells      */
   /* text */
-  --fg:    #ebdbb2;  /* primary         */
-  --dim:   #a89984;  /* secondary       */
-  --faint: #7c6f64;  /* labels/meta     */
+  --fg:    #ebdbb2;  /* primary  (fg1)  */
+  --dim:   #a89984;  /* secondary (fg4) */
+  --faint: #928374;  /* labels/meta (gray; bg4 #7c6f64 reads too faint on bg0) */
   /* accents */
   --orange: #fe8019; /* primary accent  */
   --aqua:   #8ec07c; /* secondary accent*/
@@ -112,7 +113,7 @@ img, svg, video { display: block; max-width: 100%; height: auto; }
 .hero__portrait figure { border: 1px solid var(--line2); padding: 9px; background: var(--panel); }
 .hero__portrait img { width: 100%; aspect-ratio: 1; object-fit: cover; }
 .hero__portrait figcaption {
-  display: flex; justify-content: space-between; margin-top: 9px;
+  display: flex; justify-content: space-between; gap: 12px; margin-top: 9px;
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
   text-transform: uppercase; color: var(--faint);
 }
@@ -167,7 +168,9 @@ img, svg, video { display: block; max-width: 100%; height: auto; }
 .card__tx p { margin-top: 7px; font-size: 14.5px; color: var(--dim); line-height: 1.5; }
 
 /* ---------- article (page/section content) ---------- */
-.page { padding: 56px 0 64px; }
+/* padding-block only: .page sits on the same element as .wrap, whose
+   padding-inline is the page gutter */
+.page { padding-block: 56px 64px; }
 .page__header { margin-bottom: 36px; }
 .page__eyebrow { display: block; margin-bottom: 14px; }
 .page__header h1 {
@@ -261,7 +264,7 @@ img, svg, video { display: block; max-width: 100%; height: auto; }
 .s-carousel-track::-webkit-scrollbar { display: none; }
 .s-slide { flex: 0 0 100%; scroll-snap-align: center; display: grid; place-items: center; padding: 14px; box-sizing: border-box; }
 .s-slide img { width: auto; height: auto; max-width: 100%; max-height: 62vh; border: 0; }
-.s-carousel-nav { position: absolute; top: calc(50% - 26px); width: 40px; height: 52px; background: #1d2021cc; border: 1px solid var(--line2); color: var(--fg); font-size: 22px; cursor: pointer; transition: background .15s, color .15s, border-color .15s; line-height: 1; }
+.s-carousel-nav { position: absolute; top: calc(50% - 26px); width: 40px; height: 52px; background: #282828cc; border: 1px solid var(--line2); color: var(--fg); font-size: 22px; cursor: pointer; transition: background .15s, color .15s, border-color .15s; line-height: 1; }
 .s-carousel-nav:hover { background: var(--orange); color: var(--bg); border-color: var(--orange); }
 .s-carousel-nav.prev { left: 8px; } .s-carousel-nav.next { right: 8px; }
 .s-carousel-dots { display: flex; gap: 7px; justify-content: center; margin-top: 12px; }
@@ -269,12 +272,17 @@ img, svg, video { display: block; max-width: 100%; height: auto; }
 .s-carousel-dots span.on { background: var(--orange); width: 18px; }
 
 /* Before / after compare (clip-path reveal, keyboard-operable range) */
-.s-compare-pane { position: relative; border: 1px solid var(--line2); overflow: hidden; line-height: 0; }
-.s-compare-pane img { display: block; width: 100%; aspect-ratio: 16/9; object-fit: cover; border: 0; }
+.s-compare-pane { position: relative; border: 1px solid var(--line2); overflow: hidden; line-height: 0;
+  cursor: ew-resize; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.s-compare-pane img { pointer-events: none; }
+/* natural aspect: the after image sizes the pane; before is stacked exactly on top */
+.s-compare-pane img { display: block; width: 100%; height: auto; border: 0; }
+.s-compare-pane .s-compare-before { height: 100%; object-fit: fill; }
 .s-compare-before { position: absolute; inset: 0; clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
-.s-compare-tag { position: absolute; top: 12px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg); background: #1d2021cc; padding: 4px 10px; border: 1px solid var(--line2); line-height: 1; z-index: 3; }
+.s-compare-tag { position: absolute; top: 12px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg); background: #282828cc; padding: 4px 10px; border: 1px solid var(--line2); line-height: 1; z-index: 3; }
 .s-compare-tag.left { left: 12px; } .s-compare-tag.right { right: 12px; }
-.s-compare-range { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; z-index: 4; }
+/* keyboard/AT only: pointer input is handled on the pane by slate.js */
+.s-compare-range { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; z-index: 4; pointer-events: none; }
 .s-compare-handle { position: absolute; top: 0; bottom: 0; left: var(--pos); width: 2px; background: var(--orange); transform: translateX(-1px); z-index: 2; pointer-events: none; }
 .s-compare-handle::after { content: ""; position: absolute; top: calc(50% - 17px); left: -16px; width: 34px; height: 34px; background: var(--orange); border: 3px solid var(--bg); border-radius: 50%; }
 .s-compare-handle::before { content: "\27F7"; position: absolute; top: calc(50% - 8px); left: -9px; color: var(--bg); font-size: 13px; z-index: 1; width: 20px; text-align: center; line-height: 1; }
@@ -315,6 +323,13 @@ img, svg, video { display: block; max-width: 100%; height: auto; }
   .cards { grid-template-columns: 1fr; }
   .nav__links { gap: 16px; }
   .nav__links a.nav__hide-sm { display: none; }
+}
+@media (max-width: 480px) {
+  :root { --pad: 20px; }
+  .prose table { font-size: 14px; }
+  .prose th, .prose td { padding: 6px 8px; }
+  .s-spec-row { grid-template-columns: 96px 1fr; gap: 12px; padding-inline: 16px; }
+  .s-spec-eyebrow { padding-inline: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

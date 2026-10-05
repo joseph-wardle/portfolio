@@ -44,11 +44,60 @@ document.querySelectorAll('[data-carousel]').forEach((c) => {
   }
 });
 
-/* Before/after compare — map the range input to the reveal position. */
+/* Before/after compare — pointer drag anywhere on the image (mouse, pen, touch),
+   with the hidden range input kept for keyboard use and screen readers. */
 document.querySelectorAll('[data-compare]').forEach((c) => {
   const pane = c.querySelector('.s-compare-pane');
   const range = c.querySelector('.s-compare-range');
-  if (pane && range) {
-    range.addEventListener('input', () => pane.style.setProperty('--pos', `${range.value}%`));
-  }
+  if (!pane || !range) return;
+  const set = (v) => {
+    const pos = Math.min(100, Math.max(0, v));
+    range.value = pos;
+    pane.style.setProperty('--pos', `${pos}%`);
+  };
+  const fromX = (x) => {
+    const r = pane.getBoundingClientRect();
+    set(((x - r.left) / r.width) * 100);
+  };
+  range.addEventListener('input', () => set(+range.value));
+  // Track the drag on window so it keeps following outside the pane. Mouse moves
+  // on press; touch waits until the gesture is clearly horizontal, because a
+  // vertical swipe here is a page scroll (touch-action: pan-y).
+  let drag = null;
+  pane.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const mouse = e.pointerType === 'mouse';
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, on: mouse };
+    if (mouse) fromX(e.clientX);
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    if (!drag.on) {
+      const dx = Math.abs(e.clientX - drag.x), dy = Math.abs(e.clientY - drag.y);
+      if (dy > dx && dy > 6) { drag = null; return; }
+      if (dx < 6) return;
+      drag.on = true;
+    }
+    fromX(e.clientX);
+  });
+  window.addEventListener('pointerup', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const tap = Math.abs(e.clientX - drag.x) < 6 && Math.abs(e.clientY - drag.y) < 6;
+    if (drag.on || tap) fromX(e.clientX);
+    drag = null;
+  });
+  window.addEventListener('pointercancel', (e) => {
+    if (drag && e.pointerId === drag.id) drag = null;
+  });
 });
+
+/* Autoplay clips — play only while on screen (and never under reduced motion). */
+const clips = document.querySelectorAll('video[data-autoplay]');
+if (clips.length && !reduceMotion && 'IntersectionObserver' in window) {
+  const io = new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (e.isIntersecting) e.target.play().catch(() => {});
+    else e.target.pause();
+  }), { threshold: 0.25 });
+  clips.forEach((v) => io.observe(v));
+}

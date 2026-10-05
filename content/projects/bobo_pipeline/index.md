@@ -1,83 +1,62 @@
 ---
 title: "Honey Business Pipeline"
 date: 2025-11-07
-summary: "Pipeline work on BYU's Honey Business — cross DCC USD publishing, multi-environment support, and auto-generated proxies (70× viewport speedup)."
-tags: ["USD", "TD", "Pipeline", "ShotGrid", "Maya", "Houdini", "Nuke", "Substance"]
+summary: "Pipeline work on a forest full of point-instanced foliage. Swapping whole collections for proxies got animators up to 70× faster viewports."
+tags: ["USD", "Pipeline", "ShotGrid", "Maya", "Houdini", "Python"]
 weight: 15
 track: pipeline
 ---
 
-This project is a custom DCC-agnostic production pipeline I helped build for the short film *Honey Business* by the BYU Center for Animation. It builds upon [Scott Milner's](https://www.linkedin.com/in/sdmilner/) work from [*Student Accomplice*](https://youtu.be/mM5pBgfEhP4?si=76aHx6uTfAjYnhK5) and *Love and Gold* — go read Scott's [pipeline overview](https://scottdmilner.github.io/code-projects/dungeon-pipeline/) for a deep dive into the core systems design. The fantastic [Dallin Clark](https://www.linkedin.com/in/dallin-clark1/) maintained the pipeline solo from October 2024 until I joined in late 2025. You can read about his contributions on his [portfolio](https://dallinclark.com/).
+*Honey Business* is a BYU Center for Animation short, and it was my first time working on a real production pipeline. The pipeline itself isn't mine. It builds on [Scott Milner's](https://www.linkedin.com/in/sdmilner/) work from [*Student Accomplice*](https://youtu.be/mM5pBgfEhP4?si=76aHx6uTfAjYnhK5) and *Love and Gold* (his [pipeline overview](https://scottdmilner.github.io/code-projects/dungeon-pipeline/) is a great read), and the fantastic [Dallin Clark](https://www.linkedin.com/in/dallin-clark1/) kept it running solo from October 2024 until I joined in late 2025. You can read about his work on [his portfolio](https://dallinclark.com/).
 
-The pipeline is a full production framework built around **USD** and **ShotGrid**, standardizing workflows across **Maya**, **Houdini**, **Nuke**, and **Substance Painter/Designer**. Below is a summary of the systems I built and improved.
+It's built around USD and ShotGrid, across Maya, Houdini, Nuke, and Substance. Here's what I added.
 
----
+### A forest you can actually animate in
 
-### Unified Publication
+The film takes place in a dense forest: ferns, bushes, rocks, and a lot of leaves, most of it scattered with point instancers. A single bush can hold thousands of leaves, and once a few hundred bushes landed in a shot, the viewport fell over. Proxying the individual leaves wasn't nearly enough.
 
-Houdini is at the core of the pipeline — its first-class USD support is powerful and flexible. Many USD layers are generated directly in Houdini, which historically meant Maya assets had to be published twice: once from Maya, then again from Houdini to assemble the final USD structure. I eliminated that second step.
+After much hmming and haaing, the answer was to stop proxying the pieces and replace the whole collection. Each asset's render geometry gets converted to a VDB, and a low-res mesh is built from that, so one simple proxy stands in for the entire bush. That cut draw calls dramatically. USD purposes do the switching, so the proxy shows in the viewport and the full geometry shows up at render time, and nobody has to think about it. It's fully automatic, and animators and layout artists were blessed with frame times up to 70× faster in most environments.
 
-I refactored the Maya publishing framework to construct the expected Houdini asset structure directly from Maya. When an asset is published from Maya, it generates the necessary USD files and directory structure that Houdini expects — no Houdini session required. If artists need to edit the asset in Houdini afterward, this publish step also generates a `.hipnc` file alongside the USD files for that purpose.
-
-{{< figure
-  src="maya_publish_asset_tool/maya_publish_asset_tool_01.png"
-  caption="Maya asset publish tool."
->}}
-
-{{< figure
-  src="maya_publish_asset_tool/maya_publish_asset_tool_02.png"
-  caption="Publication verification."
->}}
-
-{{< figure
-  src="maya_publish_asset_tool/maya_publish_asset_tool_03.png"
-  caption="Generated Houdini node network."
->}}
-
----
-
-### Multiple Environment Support
-
-*Honey Business* takes place in a single massive outdoor environment, but that environment has distinct areas worked on by different artists. To keep iteration clean and responsibility clear, we split it into independently workable pieces — but the existing pipeline assumed a single environment per shot.
-
-I extended the shot file manager to recognize and load multiple environment assets per shot, and updated the publishing tools to handle environment-specific data correctly. Artists can now work on different parts of the environment in parallel without stepping on each other, while the full scene still assembles correctly.
-
-{{< figure
-  src="multi_environment/nodes.png"
-  caption="Houdini node network loading multiple environment layers."
->}}
-
-{{< figure
-  src="multi_environment/example.png"
-  caption="An example shot with one environment in the foreground and another in the background."
->}}
-
----
-
-### Environmental Proxy Assets
-
-*Honey Business* has a dense outdoor environment — lots of foliage, rocks, and natural elements, much of it generated with point instancers and then scattered throughout the scene. When a bush contains thousands of leaves, simply proxying the leaves wasn't enough to stop viewport performance from tanking.
-
-The fix was to replace point instancers with automatically generated mesh proxies. The process — consuming render geometry, converting to a VDB, then generating a low-res mesh from that VDB — is now fully automated. Animators and layout artists work with frame times improved by **70×** or more in most environments. USD geometry purposes handle the switch transparently: the proxy is used in the viewport, the full-resolution geometry at render time.
-
-{{< figure
-  src="proxies/fern_render.png"
-  caption="A fern asset rendered in high quality."
->}}
-
-{{< figure
-  src="proxies/fern_proxy.png"
-  caption="The same fern asset with an automatically generated LOD proxy."
+{{< compare
+  before="proxies/fern_render.png"
+  after="proxies/fern_proxy.png"
+  labels="Full resolution|Proxy"
+  caption="A fern and its generated proxy. Drag to compare."
 >}}
 
 {{< figure
   src="proxies/forest_render.png"
-  caption="A forest environment at full resolution — 6 seconds per frame."
+  caption="A forest environment at full resolution: about 6 seconds a frame."
 >}}
 
 {{< figure
   src="proxies/forest_proxy.png"
-  caption="The same environment with proxy assets — 30 fps."
+  caption="The same environment with proxies: 30 fps."
+>}}
+
+### Publishing once instead of twice
+
+Houdini is the heart of this pipeline, and a lot of the USD gets built there. That meant Maya assets had to be published twice: once from Maya, then again from Houdini to assemble the final USD. Twice the steps, and twice the chances to forget one.
+
+I reworked the Maya publisher to build the structure Houdini expects directly, without a Houdini session. It writes the USD files and folders, plus a `.hipnc` alongside them in case an artist wants to open the asset in Houdini afterward.
+
+{{< figure
+  src="maya_publish_asset_tool/maya_publish_asset_tool_01.png"
+  caption="The Maya asset publish tool."
+>}}
+
+{{< figure
+  src="maya_publish_asset_tool/maya_publish_asset_tool_03.png"
+  caption="The Houdini network it generates."
+>}}
+
+### More than one environment per shot
+
+The forest is one huge environment, but different artists own different parts of it. To let them work in parallel, we split it into pieces, and then found out the pipeline assumed one environment per shot. I taught the shot file manager to load several environments at once and updated the publish tools to match, so each artist can work on their corner of the forest and the shot still assembles the whole thing.
+
+{{< figure
+  src="multi_environment/example.png"
+  caption="A shot with one environment in the foreground and another behind it."
 >}}
 
 {{< github repo="DallinClark/bobo-pipeline" showThumbnail=false >}}

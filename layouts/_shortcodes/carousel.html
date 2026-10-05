@@ -11,9 +11,20 @@
   <figure class="s-carousel" data-carousel data-interval="{{ $interval }}">
     <div class="s-carousel-track">
       {{- range . -}}
+        {{- /* 600/900/1200 ladder so phones don't pull the 1200px slide */ -}}
+        {{- $src := . -}}
         {{- $im := cond (gt .Width 1200) (.Resize "1200x webp q90") (.Resize (printf "%dx webp q90" .Width)) -}}
+        {{- $srcset := slice -}}
+        {{- range $w := slice 600 900 -}}
+          {{- if lt $w $im.Width -}}
+            {{- $srcset = $srcset | append (printf "%s %dw" ($src.Resize (printf "%dx webp q90" $w)).RelPermalink $w) -}}
+          {{- end -}}
+        {{- end -}}
+        {{- $srcset = $srcset | append (printf "%s %dw" $im.RelPermalink $im.Width) -}}
         <div class="s-slide">
-          <img src="{{ $im.RelPermalink }}" width="{{ $im.Width }}" height="{{ $im.Height }}"
+          <img src="{{ $im.RelPermalink }}" srcset="{{ delimit $srcset ", " }}"
+               sizes="(max-width: 760px) 100vw, 940px"
+               width="{{ $im.Width }}" height="{{ $im.Height }}"
                loading="lazy" decoding="async" alt="">
         </div>
       {{- end -}}

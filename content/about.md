@@ -1,15 +1,15 @@
 ---
 title: "About"
-description: "Joseph Wardle — pipeline TD at the BYU Center for Animation, seeking TD internships and early-career roles."
+description: "Joseph Wardle — sole pipeline TD on BYU's Sandwich Kwon Do, looking for TD internships and early-career roles."
 showDate: false
 showAuthor: true
 showPagination: false
 ---
 
-Howdy! I'm Joseph Wardle, a pipeline TD at the BYU Center for Animation. I'm currently the sole pipeline TD for *Sandwich Kwon Do*, BYU's 2027 capstone feature film, serving a crew of more than fifty artists across Linux and Windows. I also began production on *Lantern of Souls*, BYU's 2027 capstone video game in Unreal Engine. Before that I did pipeline work on *Honey Business*, BYU's 2026 animated short. Day to day, that means owning the USD + ShotGrid backbone the productions run on. Cross-DCC publishing, render telemetry, version control, and the artist tools that hold it all together.
+Howdy! I'm Joseph, a pipeline TD at the BYU Center for Animation. Right now I'm the sole pipeline TD on *Sandwich Kwon Do*, our 2027 capstone film: 50-some artists, about a hundred shots, and a release date in April. Before that I did pipeline work on *Honey Business*.
 
-I build a lot of tools. PySide2 interfaces in Maya, Houdini, Nuke, and Substance Painter, and the headless plumbing behind them. The part I care most about is the seam between systems and artists. Making a system is easy; presenting that system in a way that intuitively empowers artists is not. 
+My favorite part of the job is the conversation with artists. I've shipped plenty of tools that were wrong the first time. My previs sequencer assumed one file per sequence, and our three previs artists set me straight pretty quickly. The version that works is the one we built after they told me why.
 
-I also write graphics and systems code for fun. A Vulkan ray tracer, a rigid-body physics engine in C++23, a cycle-accurate Game Boy emulator in Rust you can [play in your browser](/projects/rgb/), and more tiddly bits.
+I also write graphics code to understand the tools our artists use. [Cenote](/projects/cenote/), my GPU path tracer, started because I wanted to know what a renderer is actually doing when a lighter waits on it. There's also a physics engine and a Game Boy emulator you can [play in your browser](/projects/rgb/).
 
-I'm looking for TD internships and early-career pipeline roles at animation and VFX studios. I graduate in April 2027. Here's my [resume](/resume.pdf), and you can reach me at [joseph.m.wardle@gmail.com](mailto:joseph.m.wardle@gmail.com), on [GitHub](https://github.com/joseph-wardle), or on [LinkedIn](https://www.linkedin.com/in/joseph-wardle-7b4b621b4/).
+I'm looking for TD internships and early-career roles at animation and VFX studios, and I graduate in April 2027. Here's my [resume](/resume.pdf). You can reach me at [joseph.m.wardle@gmail.com](mailto:joseph.m.wardle@gmail.com), on [GitHub](https://github.com/joseph-wardle), or on [LinkedIn](https://www.linkedin.com/in/joseph-wardle-7b4b621b4/).
