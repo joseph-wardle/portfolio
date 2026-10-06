@@ -8,7 +8,7 @@ track: graphics
 aliases: ["/projects/realtime_raytracer/"]
 ---
 
-I wanted to understand what a production renderer is actually doing while a lighter waits on it, so I built one. Cenote is a GPU path tracer written in Rust with Slang kernels on Vulkan ray tracing. I kept it thin on purpose, because I wanted it to be really fast at one job: lookdev.
+I wanted to understand what a production renderer is actually doing while a lighter waits on it, so I built one. Cenote is a GPU path tracer written in Rust with Slang kernels on Vulkan ray tracing. I kept it thin on purpose, because I wanted it to be really fast at lookdev and highly greppable.
 
 {{< spec >}}
 Language: Rust, Slang, C++23
@@ -25,7 +25,7 @@ Tested against: pbrt-v4
 
 ### The preview is the final frame
 
-Most renderers give you a fast, approximate preview and a slow, correct final. That's fine until the two disagree, and a shading artist has signed off on something the farm renders differently. Cenote has one estimator. The preview at one second and the frame at one hour are the same path tracer with different sample counts, so what you see early is an honest prediction of what you'll get.
+Most renderers either give a cheap preview, or a slow, correct final. That's fine, but for a lighter, honest and responsive feedback is critical. Cenote has one estimator. Its focused on extreme performance without sacrifising final frame quality.
 
 That one rule made a lot of other decisions for me. Lookdev is usually one asset on a turntable, so the scene has to fit in VRAM, and Cenote fails loudly if it doesn't instead of paging. Materials are a fixed OpenPBR closure with no shader graphs, because lookdev is dialing a material, not wiring one. And anything biased is off the table, since a shortcut in the preview breaks the whole point.
 
@@ -42,11 +42,11 @@ Cenote implements the full OpenPBR closure: base, specular, coat, fuzz, and glas
 
 A renderer that only runs in its own viewer isn't very useful to a studio, so Cenote has a Hydra 2 render delegate, `hdCenote`, written in C++23. It renders live in `usdview`, and in batch through `usdrecord` and `husk`, and it builds against the USD that ships in Houdini 22. It picks up every UsdLux light, instancing, material bindings, and render settings authored on the stage.
 
-The delegate doesn't link the renderer directly. It talks to a separate `cenote-server` process over a small change-set protocol on loopback TCP, and reads finished frames out of shared memory. The protocol is defined on both sides, in Rust and in C++, and a test holds the two byte-for-byte identical so they can't drift apart.
+The delegate doesn't link the renderer directly. Inspired by the much larger DreamWork's Arras, it talks to a separate `cenote-server` process over a small change-set protocol on loopback TCP, and reads finished frames out of shared memory. The protocol is defined on both sides, in Rust and in C++, and a test holds the two byte-for-byte identical so they can't drift apart.
 
 ### ReSTIR, and taking it back out
 
-I implemented ReSTIR, the reservoir resampling technique for scenes with lots of lights. I did spatial and temporal reuse, then path reservoirs. Per sample it was better. Then I measured it at equal wall-clock time, and the plain path tracer won by 2.6 to 4.8×. A ReSTIR sample cost five to six times more than it saved.
+ReSTIR has been the talk of the town for the past 6 years, and I started this project wanting to show it could be applied to offline rendering in feature animation contexts. I implemented ReSTIR, the reservoir resampling technique for scenes with lots of lights. I did spatial and temporal reuse, then path reservoirs. Per sample it was better. Then I measured it at equal wall-clock time, and the plain path tracer won by 2.6 to 4.8×. A ReSTIR sample cost five to six times more than it saved.
 
 So I took it out. The implementation and the measurements that retired it live on the [`restir-archive`](https://github.com/joseph-wardle/cenote/tree/restir-archive) branch. It was a lot of work to delete, but the measurement taught me more than the implementation did.
 

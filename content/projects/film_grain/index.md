@@ -9,7 +9,7 @@ track: graphics
 
 {{< katex >}}
 
-Real film grain isn't random noise laid over a picture. It comes from tiny silver crystals scattered through the film, each with its own size and position. [Newson et al. (2017)](https://www.ipol.im/pub/art/2017/192/) model this statistically and give two ways to render it. I reimplemented both in Rust, multithreaded on the CPU with Rayon and as compute shaders on the GPU with wgpu, then benchmarked the whole thing against the paper's C code.
+Real film grain is unfortunately way cooler than random noise laid over a picture. It comes from tiny silver crystals scattered through the film, each with its own size and position. [Newson et al. (2017)](https://www.ipol.im/pub/art/2017/192/) model this statistically and give two ways to render it. I reimplemented both in Rust, multithreaded on the CPU with Rayon and as compute shaders on the GPU with wgpu, then benchmarked the whole thing against the paper's C code.
 
 {{< carousel images="gallery/*" interval="3000" >}}
 
@@ -49,3 +49,5 @@ That last row is honest: my single-threaded pixel-wise code is about half the sp
 **Algorithm choice barely matters on the GPU.** Both kernels end up limited by memory bandwidth and move about the same amount of data, so their times land close together across the whole grid.
 
 So the tool's default is grain-wise on the multithreaded CPU, and it switches to pixel-wise on the GPU for very large, high-quality renders.
+
+As fun as this project was, since I finished it, the much cooler [Spektrafilm](https://github.com/andreavolpato/spektrafilm). I learned a lot on this project, and I still believe this shows my skills in GPU compute and image processing, but I reccomend anyone actually hoping to generate film grain use Spektrafilm instead. It is a truely incredible project.

@@ -7,15 +7,15 @@ weight: 15
 track: pipeline
 ---
 
-*Honey Business* is a BYU Center for Animation short, and it was my first time working on a real production pipeline. The pipeline itself isn't mine. It builds on [Scott Milner's](https://www.linkedin.com/in/sdmilner/) work from [*Student Accomplice*](https://youtu.be/mM5pBgfEhP4?si=76aHx6uTfAjYnhK5) and *Love and Gold* (his [pipeline overview](https://scottdmilner.github.io/code-projects/dungeon-pipeline/) is a great read), and the fantastic [Dallin Clark](https://www.linkedin.com/in/dallin-clark1/) kept it running solo from October 2024 until I joined in late 2025. You can read about his work on [his portfolio](https://dallinclark.com/).
+*Honey Business* is a BYU Center for Animation short, and it was my first time working on a real production pipeline. The pipeline itself has a long history. It builds on [Scott Milner's](https://www.linkedin.com/in/sdmilner/) work from [*Student Accomplice*](https://youtu.be/mM5pBgfEhP4?si=76aHx6uTfAjYnhK5) and *Love and Gold* (his [pipeline overview](https://scottdmilner.github.io/code-projects/dungeon-pipeline/) is a great read), and the fantastic [Dallin Clark](https://www.linkedin.com/in/dallin-clark1/) kept it running solo from October 2024 until I joined in late 2025. You can read about his work at [his portfolio website](https://dallinclark.com/). I was solely responsible for it starting in January of 2026.
 
-It's built around USD and ShotGrid, across Maya, Houdini, Nuke, and Substance. Here's what I added.
+It's built around USD and ShotGrid, across Maya, Houdini, Nuke, and Substance. 
 
 ### A forest you can actually animate in
 
-The film takes place in a dense forest: ferns, bushes, rocks, and a lot of leaves, most of it scattered with point instancers. A single bush can hold thousands of leaves, and once a few hundred bushes landed in a shot, the viewport fell over. Proxying the individual leaves wasn't nearly enough.
+The film takes place in a dense forest: ferns, bushes, rocks, and a lot of leaves, most of it scattered with point instancers. A single bush can hold thousands of leaves, and once a few hundred bushes landed in a shot, the viewport wasn't particularly pleased. Proxying the individual leaves didn't solve the issue.
 
-After much hmming and haaing, the answer was to stop proxying the pieces and replace the whole collection. Each asset's render geometry gets converted to a VDB, and a low-res mesh is built from that, so one simple proxy stands in for the entire bush. That cut draw calls dramatically. USD purposes do the switching, so the proxy shows in the viewport and the full geometry shows up at render time, and nobody has to think about it. It's fully automatic, and animators and layout artists were blessed with frame times up to 70× faster in most environments.
+After much testing, hmming and haaing, the answer was to stop proxying the pieces and replace the whole collection. Each asset's render geometry gets converted to a VDB, and a low-res mesh is built from that, so one simple proxy stands in for the entire bush. That cut draw calls dramatically. USD purposes do the switching, so the proxy shows in the viewport and the full geometry shows up at render time, and nobody has to think about it. It's fully automatic, and animators and layout artists were blessed with frame times up to 70× faster in most environments.
 
 {{< compare
   before="proxies/fern_render.png"
@@ -36,7 +36,7 @@ After much hmming and haaing, the answer was to stop proxying the pieces and rep
 
 ### Publishing once instead of twice
 
-Houdini is the heart of this pipeline, and a lot of the USD gets built there. That meant Maya assets had to be published twice: once from Maya, then again from Houdini to assemble the final USD. Twice the steps, and twice the chances to forget one.
+Houdini is the heart of this pipeline, and a lot of the USD gets built there. That meant Maya assets had to be published twice: once from Maya, then again from Houdini to assemble the final USD. The double publish step required artists open pultiple heavy pieces of software, and remember to publish both versions.
 
 I reworked the Maya publisher to build the structure Houdini expects directly, without a Houdini session. It writes the USD files and folders, plus a `.hipnc` alongside them in case an artist wants to open the asset in Houdini afterward.
 

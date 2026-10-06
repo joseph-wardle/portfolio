@@ -29,9 +29,9 @@
 
 #box(fill: lightbg, stroke: (left: 3pt + rgb("#9d5a2f")), inset: (left: 12pt, right: 8pt, top: 8pt, bottom: 8pt), width: 100%)[
 #work(
-  title: "Pipeline Technical Director - Student Short Films",
+  title: "Pipeline Technical Director - Capstone Films",
   location: "Provo, UT",
-  company: "Brigham Young University Center for Animation",
+  company: "Brigham Young University - Animation Department",
   dates: "October 2025 - Present",
 )
 

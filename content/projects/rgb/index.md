@@ -7,7 +7,7 @@ weight: 25
 track: graphics
 ---
 
-**rgb** is a Game Boy (DMG) emulator written in Rust. I wanted to understand how a whole computer fits together, and the Game Boy is small enough to hold in your head. Pick a `.gb` ROM below and try it.
+**rgb** is a Game Boy (DMG) emulator written in Rust. Pick a `.gb` ROM below and try it.
 
 {{< gameboy >}}
 
@@ -15,15 +15,15 @@ track: graphics
 
 ### What's inside a Game Boy
 
-There are four main pieces. The **CPU** is a Sharp SM83, a cousin of the Z80, running at about 4.19 MHz. The **PPU** draws the 160×144 screen one line at a time, mixing a background, a window, and up to ten sprites per line. The **APU** makes sound from two square waves, a wavetable, and a noise channel. And the **memory bus** connects all of it: every read and write goes through it, whether it's hitting the cartridge, video memory, or a hardware register.
+There are four main pieces. The **CPU** is a Sharp SM83, a cousin of the Z80, running at about 4.19 MHz. The **PPU** draws the 160×144 screen one line at a time, mixing a background, a window, and up to ten sprites per line. The **APU** makes sound from two square waves, a wavetable, and a noise channel. And the **memory bus** connects all of it: every read and write goes through it, whether it's hitting the cartridge, video memory, or a hardware register. Its also the hardest part to model elegantly.
 
 ### Getting the timing right
 
-The easy way to write an emulator is to run a whole CPU instruction, then let the PPU and APU catch up. That works for most games. But a lot of hardware behavior depends on exactly when a read or write lands, and catching up after the fact gets it wrong.
+I first wrote this system assuming you can run one CPU instruction, then let the PPU and APU catch up. That works for most games. But a lot of hardware behavior depends on exactly when a read or write lands, and catching up after the fact gets it wrong.
 
-So rgb steps everything one machine cycle (four clock ticks) at a time. Every memory access inside an instruction ticks the rest of the hardware forward before the next one happens, so reads and writes land on the same cycle they would on a real Game Boy.
+Rgb steps everything one machine cycle (four clock ticks) at a time. Every memory access inside an instruction ticks the rest of the hardware forward before the next one happens, so reads and writes land on the same cycle they would on a real Game Boy.
 
-To check it, I run the community's hardware test ROMs as part of the test suite. It passes all of Blargg's `cpu_instrs`, `instr_timing`, and `mem_timing` tests, and 49 of the 65 Mooneye acceptance tests. Most of the rest need the PPU timed below the level of a whole scanline, which I haven't built yet, so games that change the scroll in the middle of a line won't look right. That's the next thing on the list.
+Because the emulation community is fantastic, there are many hardware test ROMs available. Rgb passes all of Blargg's `cpu_instrs`, `instr_timing`, and `mem_timing` tests, and 49 of the 65 Mooneye acceptance tests. Most of the rest need the PPU timed below the level of a whole scanline, which I haven't built yet, so games that change the scroll in the middle of a line won't look right. That's the next thing on the list.
 
 ### Three crates
 
