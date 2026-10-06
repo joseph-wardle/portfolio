@@ -3,15 +3,14 @@
        `track` is a front-matter param, not a taxonomy (ADR-002). */ -}}
 {{- $pages := .pages -}}
 {{- $defs := slice
-  (dict "key" "pipeline" "title" "Production Pipeline" "note" "what fifty artists run every day")
-  (dict "key" "graphics" "title" "Graphics &amp; Systems" "note" "built from scratch") -}}
+  (dict "key" "pipeline" "title" "Production Pipeline")
+  (dict "key" "graphics" "title" "Graphics &amp; Systems") -}}
 {{- range $defs }}
   {{- $def := . -}}
   {{- with where $pages "Params.track" $def.key }}
   <section class="section{{ if eq $def.key "graphics" }} section--alt{{ end }}" id="{{ $def.key }}">
     <div class="section__head">
       <h2>{{ $def.title | safeHTML }}</h2>
-      <span class="section__note mono"><b>//</b> {{ $def.note }}</span>
     </div>
     <div class="cards">
       {{- range .ByWeight }}{{ partial "card.html" . }}{{ end }}
