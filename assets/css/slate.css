@@ -232,7 +232,7 @@ img, svg, video { display: block; max-width: 100%; height: auto; }
 }
 .s-fig figcaption::before, .s-video figcaption::before, .s-carousel figcaption::before,
 .s-embed figcaption::before, .s-compare figcaption::before { content: "\25B8\00A0"; color: var(--orange); }
-.s-fig img { width: 100%; height: auto; }
+.s-fig img { width: 100%; height: auto; max-width: var(--fig-max, none); }
 
 /* GitHub card — it's an <a>, so neutralize the .prose link underline/color */
 .prose a.s-gh, .prose a.s-gh:hover { text-decoration: none; }

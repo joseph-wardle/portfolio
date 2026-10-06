@@ -13,11 +13,12 @@
       {{- range . -}}
         {{- /* 600/900/1200 ladder so phones don't pull the 1200px slide */ -}}
         {{- $src := . -}}
-        {{- $im := cond (gt .Width 1200) (.Resize "1200x webp q90") (.Resize (printf "%dx webp q90" .Width)) -}}
+        {{- $w0 := cond (gt .Width 1200) 1200 .Width -}}
+        {{- $im := partial "image-encode.html" (dict "res" $src "w" $w0) -}}
         {{- $srcset := slice -}}
         {{- range $w := slice 600 900 -}}
           {{- if lt $w $im.Width -}}
-            {{- $srcset = $srcset | append (printf "%s %dw" ($src.Resize (printf "%dx webp q90" $w)).RelPermalink $w) -}}
+            {{- $srcset = $srcset | append (printf "%s %dw" (partial "image-encode.html" (dict "res" $src "w" $w)).RelPermalink $w) -}}
           {{- end -}}
         {{- end -}}
         {{- $srcset = $srcset | append (printf "%s %dw" $im.RelPermalink $im.Width) -}}

@@ -21,3 +21,8 @@ Project pages are image-heavy (26 `figure` calls, 2 carousels, `featured.*` per 
 - `width`/`height` always emitted from the processed resource → zero layout shift.
 - Carousel reuses the same processing helper (keeps its current `webp q75` behavior, restyled).
 - Slightly more Hugo image-cache usage; CI already caches `hugo_cache` between runs.
+
+## Amendment (2026-10-05): screenshot quality
+UI screenshots looked crunchy. Two causes, both fixed in `_partials/image-encode.html` and `_partials/image.html`:
+- **Ladder skipped the native width.** A 670px screenshot got only a 480w rung and was stretched back up. The source width is now always added when it falls inside the ladder.
+- **Lossy webp smears UI text** (4:2:0 chroma). Every rung is now encoded lossy q90, and PNGs are also encoded lossless; lossless wins when it's at most 2x the lossy bytes. Measured on this site: screenshots and node graphs land at 0.5-2x and go lossless, photographic renders at 2.3-7x stay lossy. `carousel` and `compare` use the same helper.

@@ -6,7 +6,13 @@
      class  (string)            applied to <img>
      sizes  (string)            default "100vw"
      widths (slice of ints)     default 480/768/1200/1600
-     eager  (bool)              true → LCP: fetchpriority=high, not lazy; false → lazy+async */ -}}
+     eager  (bool)              true → LCP: fetchpriority=high, not lazy; false → lazy+async
+   Encoding: lossy webp q90, except PNGs, which are also encoded lossless and
+   keep that when it's at most 2x the lossy bytes. Lossy webp's 4:2:0 chroma
+   smears UI text; screenshots and node graphs land at 0.5-2x and go lossless,
+   while photographic renders land at 2.3-7x and stay lossy.
+   The source's own width is always offered when it falls inside the ladder,
+   so a 670px screenshot isn't shrunk to 480 and stretched back up. */ -}}
 {{- $r := .res -}}
 {{- if $r -}}
   {{- $alt := .alt | default "" -}}
@@ -15,6 +21,10 @@
   {{- $eager := .eager | default false -}}
   {{- $ladder := .widths | default (slice 480 768 1200 1600) -}}
   {{- $sub := $r.MediaType.SubType -}}
+  {{- $top := index (last 1 $ladder) 0 -}}
+  {{- if and (lt $r.Width $top) (not (in $ladder $r.Width)) -}}
+    {{- $ladder = $ladder | append $r.Width | sort -}}
+  {{- end -}}
   {{- $load := cond $eager (printf "fetchpriority=%q" "high") (printf "loading=%q" "lazy") -}}
   {{- if or (eq $sub "svg") (eq $sub "gif") -}}
   <img src="{{ $r.RelPermalink }}" alt="{{ $alt }}"{{ with $class }} class="{{ . }}"{{ end }} {{ $load | safeHTMLAttr }} decoding="async">
@@ -23,13 +33,13 @@
     {{- $largest := $r -}}
     {{- range $w := $ladder -}}
       {{- if le $w $r.Width -}}
-        {{- $img := $r.Resize (printf "%dx webp q90" $w) -}}
+        {{- $img := partial "image-encode.html" (dict "res" $r "w" $w) -}}
         {{- $srcset = $srcset | append (printf "%s %dw" $img.RelPermalink $w) -}}
         {{- $largest = $img -}}
       {{- end -}}
     {{- end -}}
     {{- if not $srcset -}}
-      {{- $img := $r.Resize (printf "%dx webp q90" $r.Width) -}}
+      {{- $img := partial "image-encode.html" (dict "res" $r "w" $r.Width) -}}
       {{- $srcset = slice (printf "%s %dw" $img.RelPermalink $r.Width) -}}
       {{- $largest = $img -}}
     {{- end -}}

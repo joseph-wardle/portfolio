@@ -19,7 +19,7 @@ DCCs: Maya, Houdini, Nuke, Substance, Blender
 Platforms: Linux (EL9), Windows 11
 {{< /spec >}}
 
-### Renders that don't flicker
+### Pinned asset and shot publishes
 
 Render flicker has haunted BYU productions for years. Someone republishes an asset while a shot is rendering on the farm, and halfway through the job the frames start picking up the new version. 
 
@@ -37,9 +37,21 @@ chair/
   .v003.tmp/    being written
 ```
 
+{{< figure
+  src="version_control/publish_shot_layer_dialogue.png"
+  width="510"
+  caption="Publishing a shot layer from Houdini. The note goes into the version history, and Final and the downstream ping are one checkbox each."
+>}}
+
 I extended this system to environment assembly and shot departments. The biggest improvement from this system was version pinning at render time on the farm. When a render gets launched, the Tractor job claims its own render version folder and writes a `render.usd` that pins every layer in the shot to the exact version it was at when they clicked. The farm renders that with plain `husk`, so a republish halfway through the job changes nothing. Each denoise frame is its own retryable command, a cleanup step marks the version complete, and comp's Nuke Reads pick up the new version on their own.
 
 It fixed a people problem too. When an upstream department publishes something broken or not yet approved, downstream doesn't have to stop and wait for the fix anymore. They are free tostay on the version that works, or compare the two.
+
+{{< figure
+  src="version_control/load_versioned_layers_node.png"
+  width="670"
+  caption="Loading a shot's department layers in Houdini. Most follow Current, while Animation and Lighting are held on specific versions."
+>}}
 
 <!-- CAPTURE: version history UI with Make Current; Tractor Send graph + a render version folder -->
 
@@ -73,15 +85,13 @@ By hand, all of that took more than five minutes a shot and was easy to get subt
 
 <!-- CAPTURE: previs clip (scrub the cut, overlapping shots, break-out, open the layout scene) -->
 
-### A show look that doesn't eat the blues
+### Color Space Management
 
-Past BYU films displayed through ACES 1.0, and we had issues where it flattened saturated blues. Everyone wanted something better this time. The lighting director and art director assumed ACES 2.0 would fix it. I liked OpenDRT. I shipped both as views in the show's config, let the leads work with both, and later asked which they preferred. OpenDRT is now the default in every viewport on the show.
+Past BYU films displayed through ACES 1.0, and we had issues where it flattened saturated blues. The last two films used a different display transform inside of houdini than in renders. I really wanted to be the first BYU film to handle color correctly.The lighting director and art director assumed ACES 2.0 would fix our woes. I liked OpenDRT better. I shipped both as views in the show's config, let the leads work with both, and later asked which they preferred. OpenDRT is now the default in every viewport on the show.
 
 The catch is that our lab machines run OCIO 2.3, which can't evaluate either transform. So a script generates the show's config on top of the ACES 1.3 CG config, and the two looks are baked offline. For OpenDRT, it compiles the reference DCTL with a C++ compiler and evaluates it on the CPU. ACES 2.0 gets sampled from OCIO 2.5. Each one becomes a 65³ LUT (ACEScct in, display-linear Rec.709 out), with the shaper and display encoding written natively into the config. Each look also has a black-and-white view, so lighters can check values without color getting in the way.
 
 That config is the default in Houdini, Maya, Nuke, and Blender, RenderMan's texture colorspaces are mapped onto it, and playblasts encode through it too. It matters most for lighting and rendering, but shading works through it as well, so everyone is looking at the same picture.
-
-<!-- CAPTURE: compare shortcode, ACES 1.0 vs OpenDRT on a blue-heavy frame -->
 
 ### One-click publish across DCCs
 
@@ -120,6 +130,12 @@ The result is one viewer shared by Maya and Houdini. It plays the frames back wi
 
 **Publish announcements.** When something publishes, the departments downstream hear about it. A rig publish pings Animation, an animation publish pings CFX, FX, and Lighting, and so on. Discord pings the right roles, and a ShotGrid Note on the Shot goes to whoever is assigned downstream. Rollbacks announce themselves too ("moved to v003"), so nobody is surprised when a version changes under them.
 
+{{< figure
+  src="version_control/discord_publish_announcement.png"
+  width="412"
+  caption="An animation final pinging CFX, FX, and Lighting on Discord."
+>}}
+
 **Picking rigs on animation publish.** On our last film, a prop rig broke on shots that were already finaled, and fixing it meant republishing those shots without replacing every other rig's animation. Now animators choose which rigs go out, and anything published before is kept.
 
 **Pin shift.** Insert or remove time at a frame without deforming the animation around it.
@@ -128,6 +144,6 @@ The result is one viewer shared by Maya and Houdini. It plays the frames back wi
 
 **2D effects in Blender.** Grease Pencil effects drawn over the latest render of the shot, with published geometry as holdouts.
 
-<!-- CAPTURE: Discord announcement screenshot; one fx2d still -->
+<!-- CAPTURE: one fx2d still -->
 
 {{< github repo="joseph-wardle/sandwich-pipeline" showThumbnail=false >}}

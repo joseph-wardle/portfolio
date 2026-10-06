@@ -1,0 +1,8 @@
+{{- /* image-encode.html — resize one rung to webp; see image.html for the
+   lossy/lossless rule. ctx: res (resource), w (int). Returns the resource. */ -}}
+{{- $img := .res.Resize (printf "%dx webp q90" .w) -}}
+{{- if eq .res.MediaType.SubType "png" -}}
+  {{- $ll := .res.Resize (printf "%dx webp lossless" .w) -}}
+  {{- if le (len $ll.Content) (mul 2 (len $img.Content)) -}}{{- $img = $ll -}}{{- end -}}
+{{- end -}}
+{{- return $img -}}

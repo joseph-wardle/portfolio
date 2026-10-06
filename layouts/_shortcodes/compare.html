@@ -11,8 +11,8 @@
   {{- $.Page.Store.Set "needsJS" true -}}
   {{- /* downscale only: small renders (e.g. 480px test scenes) stay pixel-true */ -}}
   {{- $w := cond (gt $after.Width 1400) 1400 $after.Width -}}
-  {{- $b := $before.Resize (printf "%dx webp q90" $w) -}}
-  {{- $a := $after.Resize (printf "%dx webp q90" $w) -}}
+  {{- $b := partial "image-encode.html" (dict "res" $before "w" $w) -}}
+  {{- $a := partial "image-encode.html" (dict "res" $after "w" $w) -}}
   <figure class="s-compare" data-compare>
     <div class="s-compare-pane" style="--pos:50%">
       <img class="s-compare-after" src="{{ $a.RelPermalink }}" width="{{ $a.Width }}" height="{{ $a.Height }}" loading="lazy" decoding="async" alt="{{ index $labels 1 }}">
