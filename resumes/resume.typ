@@ -1,6 +1,6 @@
 #import "@preview/basic-resume:0.2.9": *
 
-#let name = "Joseph Wardle"
+#let name = "Joseph Wardle - Production TD"
 #let location = "Provo, UT"
 #let email = "joseph.m.wardle@gmail.com"
 #let github = "github.com/joseph-wardle"
@@ -16,14 +16,14 @@
   phone: phone,
   personal-site: personal-site,
   accent-color: "#9d5a2f",
-  font: "Linux Libertine",
+  font: "Geist",
   paper: "us-letter",
   author-position: left,
   personal-info-position: left,
 )
 
-#set text(size: 10pt)
-#set par(justify: false, leading: 0.62em, spacing: 0.7em)
+#set text(size: 9.5pt)
+#set par(justify: false, leading: 0.7em, spacing: 0.8em)
 
 == Work Experience
 
@@ -44,7 +44,7 @@
 - Built a shared *Maya/Houdini playblast previewer* with FFmpeg burn-ins and *ShotGrid Version uploads*.
 - Established the show's *OCIO* color pipeline, baking *OpenDRT and ACES 2.0* to 65³ LUTs for OCIO 2.3 compatibility across Houdini, Maya, Nuke, and Blender.
 
-*Honey Business* (contributor to an existing pipeline)
+*Honey Business*
 - Built whole-collection *VDB-to-mesh foliage proxies*, switched with USD purposes, for *up to 70× faster viewport performance*.
 ]
 
@@ -57,14 +57,6 @@
 - Developed and maintained *Django* web services, REST endpoints, and internal admin UIs for non-technical users.
 - Built *GitHub Actions* pipelines for testing, container builds, and deployment; used *Docker Compose* for local development and *Jira* for project tracking.
 
-#work(
-  title: "Audio Engineer",
-  location: "Provo, UT",
-  company: "Brigham Young University",
-  dates: "September 2023 - November 2025",
-)
-- Designed sound systems, mixed live audio, and supported streaming for stadium sports, devotionals, and performances.
-
 == Projects
 
 #box(fill: lightbg, stroke: (left: 3pt + rgb("#9d5a2f")), inset: (left: 12pt, right: 8pt, top: 8pt, bottom: 8pt), width: 100%)[
@@ -73,7 +65,7 @@
   name: "Cenote - GPU Path Tracer and Hydra Render Delegate",
   url: "github.com/joseph-wardle/cenote",
 )
-- Built a *Rust/Vulkan* GPU path tracer with *Slang* kernels and a *Hydra 2* render delegate for usdview, husk, and Houdini; one unbiased estimator serves interactive previews and final frames.
+- Built a *Rust/Vulkan* GPU path tracer with *Slang* kernels and a *Hydra 2* render delegate for usdview, husk, and Houdini.
 - Implemented *OpenPBR* shading with baked energy-compensation tables; verified with white furnace tests and comparisons against *pbrt-v4*.
 ]
 
