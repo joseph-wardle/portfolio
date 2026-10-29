@@ -1,4 +1,4 @@
-#import "@preview/basic-resume:0.2.9": *
+#import "@preview/basic-resume:0.2.10": *
 
 #let name = "Joseph Wardle - Production TD"
 #let location = "Provo, UT"
@@ -23,7 +23,7 @@
 )
 
 #set text(size: 9.5pt)
-#set par(justify: false, leading: 0.7em, spacing: 0.8em)
+#set par(justify: false, leading: 0.8em, spacing: 1.0em)
 
 == Work Experience
 
